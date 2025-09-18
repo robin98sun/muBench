@@ -5,7 +5,7 @@
       "image": "msvcbench/microservice:latest",
       "cluster_domain": "cluster",
       "path": "/api/v1",
-      "dns-resolver":"coredns.kube-system.svc.cluster.local",
+      "dns-resolver":"kube-dns.kube-system.svc.cluster.local",
       "scheduler-name": "default-scheduler",
       "sleep": 0,
       "nginx-gw": true,
