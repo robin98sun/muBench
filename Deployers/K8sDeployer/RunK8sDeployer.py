@@ -26,6 +26,7 @@ def create_deployment_config():
     K8sYamlBuilder.create_workmodel_configmap_yaml_file(workmodel, k8s_parameters, nfs_conf, builder_module_path)
     K8sYamlBuilder.create_internalservice_configmap_yaml_file(k8s_parameters, nfs_conf, output_path, internal_service_functions_file_path)
     created_items = os.listdir(f"{builder_module_path}/yamls")
+    print(f"items created at: {builder_module_path}/yamls")
     print(f"The following files are created: {created_items}")
     print("---")
     # return a list of the files just created
