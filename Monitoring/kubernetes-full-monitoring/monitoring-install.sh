@@ -202,7 +202,7 @@ deployment:
           - key: kubernetes.io/hostname
             operator: In
             values:
-              - ${head_node_label_value}
+              - ${head_node_name}
 EOF
 
 echo "helm install -n istio-system -f kiali-values.yaml -f kiali-scheduling.yaml kiali-server kiali/kiali-server"
