@@ -36,6 +36,7 @@ if [[ -n $(helm list -n monitoring) ]]; then
     helm uninstall prometheus-operator -n monitoring
     helm uninstall istio-base -n istio-system
     helm uninstall istiod -n istio-system
+    helm uninstall kiali -n istio-system
     helm uninstall kiali-server -n istio-system
     echo "Deleting namespace monitoring"
     kubectl delete namespace monitoring
@@ -211,7 +212,7 @@ helm repo update
 
 cat <<EOF > kiali-scheduling.yaml
 deployment:
-  nodeSelector:
+  node_selector:
     kubernetes.io/hostname: ${head_node_name}
 EOF
 
