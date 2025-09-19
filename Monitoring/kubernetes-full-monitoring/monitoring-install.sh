@@ -36,11 +36,10 @@ echo "Head node label value: ${head_node_label_value}"
 if [[ -n $(helm list -n monitoring) ]]; then
     echo "Uninstalling prometheus, istio-base, istiod, istio-ingressgateway, jaeger, kiali"
     helm uninstall prometheus -n monitoring
+    helm uninstall prometheus-operator -n monitoring
     helm uninstall istio-base -n istio-system
     helm uninstall istiod -n istio-system
-    helm uninstall istio-ingressgateway -n istio-system
-    helm uninstall jaeger -n istio-system
-    helm uninstall kiali-server -n monitoring
+    helm uninstall kiali-server -n istio-system
     echo "Deleting namespace monitoring"
     kubectl delete namespace monitoring
     echo "Deleting namespace istio-system"
