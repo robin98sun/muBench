@@ -137,21 +137,6 @@ pilot:
             operator: In
             values:
             - ${head_node_name}
-
-# Gateway (Ingress/Egress)
-gateways:
-  istio-ingressgateway:
-    nodeSelector:
-      kubernetes.io/hostname: ${head_node_name}
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-              - ${head_node_name}
 EOF
 
 echo "helm install istio-base istio/base -n istio-system -f istio-values.yaml"
@@ -160,8 +145,22 @@ helm install istio-base istio/base -n istio-system -f istio-values.yaml
 echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml"
 helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml
 
-echo "helm install istio-ingressgateway istio/gateway -n istio-system -f istio-values.yaml"
-helm install istio-ingressgateway istio/gateway -n istio-system -f istio-values.yaml
+cat <<EOF > istio-gateway-values.yaml
+nodeSelector:
+  kubernetes.io/hostname: ${head_node_name}
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - ${head_node_name}
+EOF
+
+echo "helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml"
+helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml
 
 echo "kubectl label namespace ${microservice_namespace} istio-injection=enabled"
 kubectl label namespace ${microservice_namespace} istio-injection=enabled
@@ -220,10 +219,10 @@ kubectl apply -f kiali-nodeport.yaml
 # #########################################################################################################################
 echo "Monitoring installation completed"
 echo "Grafana admin user: admin"
-echo "Grafana admin password: $(kubectl --namespace monitoring get secrets prometheus-grafana -o jsonpath="{.data.admin-password}")"
-echo "Grafana URL: http://${master_ip}:30001"
-echo "Prometheus URL: http://${master_ip}:30000"
-echo "Jaeger URL: http://${master_ip}:30002"
-echo "Kiali URL: http://${master_ip}:30003"
+echo "Grafana admin password: $(kubectl --namespace monitoring get secrets prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 -d)"
+echo "Prometheus URL: http://master_ip:30000"
+echo "Grafana URL: http://master_ip:30001"
+echo "Jaeger URL: http://master_ip:30002"
+echo "Kiali URL: http://master_ip:30003"
 echo "----------------------------------------"
 
