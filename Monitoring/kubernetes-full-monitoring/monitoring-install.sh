@@ -114,7 +114,7 @@ prometheusOperator:
             values:
             - ${head_node_name}
 
-kubeStateMetrics:
+kube-state-metrics:
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
