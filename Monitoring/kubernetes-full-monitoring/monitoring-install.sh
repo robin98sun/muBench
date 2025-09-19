@@ -102,6 +102,28 @@ grafana:
             operator: In
             values:
             - ${head_node_name}
+
+prometheusOperator:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - ${head_node_name}
+
+kubeStateMetrics:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - ${head_node_name}
 EOF
 
 echo "helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring -f prometheus-values.yaml"
