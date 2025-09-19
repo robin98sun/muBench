@@ -210,21 +210,9 @@ helm repo add kiali https://kiali.org/helm-charts
 helm repo update
 
 cat <<EOF > kiali-scheduling.yaml
-
 deployment:
   nodeSelector:
     kubernetes.io/hostname: ${head_node_name}
-
-  affinity:
-    node:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-              - ${head_node_name}
 EOF
 
 echo "helm install -n istio-system -f kiali-values.yaml -f kiali-scheduling.yaml kiali-server kiali/kiali-server"
