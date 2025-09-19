@@ -1,15 +1,15 @@
 #! /bin/bash
 # Secure .kube
 microservice_namespace="ms"
-head_node_label="node-role=worker"
+head_node_name="master"
 while [[ $# -gt 0 ]]; do
     case $1 in
         --ns=*)
             microservice_namespace="${1#*=}"
             shift
             ;;
-        --head-node-label=*)
-            head_node_label="${1#*=}"
+        --head-node-name=*)
+            head_node_name="${1#*=}"
             shift
             ;;
         *)
@@ -25,10 +25,7 @@ if [[ -z $(kubectl get namespace ${microservice_namespace}) ]]; then
     kubectl create namespace ${microservice_namespace}
 fi
 
-head_node_label_key=$(echo $head_node_label | cut -d'=' -f1)  
-head_node_label_value=$(echo $head_node_label | cut -d'=' -f2)
-echo "Head node label key: ${head_node_label_key}"
-echo "Head node label value: ${head_node_label_value}"
+echo "Head node name: ${head_node_name}"
 
 # #########################################################################################################################
 # Uninstall if already installed
@@ -66,9 +63,9 @@ global:
   podAntiAffinityPreset: ""
   nodeAffinityPreset:
     type: hard
-    key: ${head_node_label_key}
+    key: kubernetes.io/hostname
     values:
-      - ${head_node_label_value}
+      - ${head_node_name}
 
 # Or more fine-grained (per component):
 prometheus:
@@ -78,10 +75,10 @@ prometheus:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: ${head_node_label_key}
+            - key: kubernetes.io/hostname
               operator: In
               values:
-              - ${head_node_label_value}
+              - ${head_node_name}
 
 alertmanager:
   alertmanagerSpec:
@@ -90,10 +87,10 @@ alertmanager:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: ${head_node_label_key}
+            - key: kubernetes.io/hostname
               operator: In
               values:
-              - ${head_node_label_value}
+              - ${head_node_name}
 
 grafana:
   affinity:
@@ -101,10 +98,10 @@ grafana:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: ${head_node_label_key}
+          - key: kubernetes.io/hostname
             operator: In
             values:
-            - ${head_node_label_value}
+            - ${head_node_name}
 EOF
 
 echo "helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring -f prometheus-values.yaml"
@@ -129,32 +126,32 @@ cat <<EOF > istio-values.yaml
 
 pilot:
   nodeSelector:
-    ${head_node_label_key}: ${head_node_label_value}
+    kubernetes.io/hostname: ${head_node_name}
   # Or full affinity if you want stricter control
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: ${head_node_label_key}
+          - key: kubernetes.io/hostname
             operator: In
             values:
-            - ${head_node_label_value}
+            - ${head_node_name}
 
 # Gateway (Ingress/Egress)
 gateways:
   istio-ingressgateway:
     nodeSelector:
-      ${head_node_label_key}: ${head_node_label_value}
+      kubernetes.io/hostname: ${head_node_name}
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: ${head_node_label_key}
+            - key: kubernetes.io/hostname
               operator: In
               values:
-              - ${head_node_label_value}
+              - ${head_node_name}
 EOF
 
 echo "helm install istio-base istio/base -n istio-system -f istio-values.yaml"
@@ -176,8 +173,8 @@ kubectl apply -f istio-prometheus-operator.yaml
 # #########################################################################################################################
 # Jaeger
 # #########################################################################################################################
-echo "sed -i "s/node-role/${head_node_label_key}/g" -i "s/worker/${head_node_label_value}/g" jaeger.yaml"
-sed -i "s/node-role/${head_node_label_key}/g" -i "s/worker/${head_node_label_value}/g" jaeger.yaml
+echo "sed -i 's/<node-name>/${head_node_name}/g' jaeger.yaml"
+sed -i "s/robin-llm-openwhisk-head/${head_node_name}/g" jaeger.yaml
 echo "kubectl apply -f jaeger.yaml"
 kubectl apply -f jaeger.yaml
 
@@ -195,14 +192,14 @@ cat <<EOF > kiali-scheduling.yaml
 
 deployment:
   nodeSelector:
-    ${head_node_label_key}: ${head_node_label_value}
+    kubernetes.io/hostname: ${head_node_name}
 
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: ${head_node_label_key}
+          - key: kubernetes.io/hostname
             operator: In
             values:
               - ${head_node_label_value}

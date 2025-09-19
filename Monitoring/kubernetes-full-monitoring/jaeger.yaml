@@ -19,17 +19,17 @@ spec:
         prometheus.io/port: "14269"
     spec:
       nodeSelector:
-        node-role: worker   # <--- schedules only on nodes with this label
+        kubernetes.io/hostname: robin-llm-openwhisk-head   # <--- schedules only on nodes with this label
       # Or use affinity for more control:
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: node-role
+              - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - worker
+                - robin-llm-openwhisk-head
       containers:
         - name: jaeger
           image: "docker.io/jaegertracing/all-in-one:1.35"
