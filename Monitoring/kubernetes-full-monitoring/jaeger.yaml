@@ -18,6 +18,18 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "14269"
     spec:
+      nodeSelector:
+        node-role: worker   # <--- schedules only on nodes with this label
+      # Or use affinity for more control:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role
+                operator: In
+                values:
+                - worker
       containers:
         - name: jaeger
           image: "docker.io/jaegertracing/all-in-one:1.35"

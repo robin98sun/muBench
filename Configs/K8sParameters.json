@@ -1,9 +1,9 @@
 {
    "K8sParameters": {
       "prefix_yaml_file":"mubench",
-      "namespace": "ms",
+      "namespace": "default",
       "image": "msvcbench/microservice:latest",
-      "cluster_domain": "cluster",
+      "cluster_domain": "cluster.local",
       "path": "/api/v1",
       "dns-resolver":"kube-dns.kube-system.svc.cluster.local",
       "scheduler-name": "default-scheduler",
