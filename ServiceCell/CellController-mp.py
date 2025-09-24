@@ -74,6 +74,14 @@ if "request_method" in globalDict['work_model'][ID].keys():
 else:
     request_method = "rest"
 
+app.logger.info(f'request_method: {request_method}')
+app.logger.info(f'globalDict: {globalDict}')
+app.logger.info(f'globalDict["work_model"]: {globalDict["work_model"]}')
+app.logger.info(f'globalDict["work_model"][ID]: {globalDict["work_model"][ID]}')
+app.logger.info(f'globalDict["work_model"][ID]["request_method"]: {globalDict["work_model"][ID]["request_method"]}')
+app.logger.info(f'globalDict["work_model"][ID]["request_method"].lower(): {globalDict["work_model"][ID]["request_method"].lower()}')
+
+
 ########################### PROMETHEUS METRICS
 registry = CollectorRegistry()
 multiprocess.MultiProcessCollector(registry)
