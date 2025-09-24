@@ -80,13 +80,6 @@ app.logger.info(f'K8S_APP: {K8S_APP}')
 app.logger.info(f'PN: {PN}')
 app.logger.info(f'TN: {TN}')
 app.logger.info(f'request_method: {request_method}')
-app.logger.info(f'globalDict: {globalDict}')
-app.logger.info(f'globalDict["work_model"]: {globalDict["work_model"]}')
-app.logger.info(f'globalDict["work_model"][ID]: {globalDict["work_model"][ID]}')
-app.logger.info(f'globalDict["work_model"][ID]["request_method"]: {globalDict["work_model"][ID]["request_method"]}')
-app.logger.info(f'globalDict["work_model"][ID]["request_method"].lower(): {globalDict["work_model"][ID]["request_method"].lower()}')
-
-
 
 ########################### PROMETHEUS METRICS
 registry = CollectorRegistry()
@@ -125,7 +118,7 @@ def start_worker():
     
     try:
         start_request_processing = time.time()
-        app.logger.info('Request Received')
+        app.logger.info('Request Received via REST')
         
         query_string = request.query_string.decode()
         behaviour_id = request.args.get('bid', default = 'default', type = str)
@@ -250,7 +243,7 @@ class gRPCThread(Thread, pb2_grpc.MicroServiceServicer):
     def GetMicroServiceResponse(self, req, context):
         try:
             start_request_processing = time.time()
-            app.logger.info.info('Request Received')
+            app.logger.info('Request Received via gRPC')
             message = req.message
             remote_address = context.peer().split(":")[1]
             app.logger.info(f'I am service: {ID} and I received this message: --> "{message}"')
