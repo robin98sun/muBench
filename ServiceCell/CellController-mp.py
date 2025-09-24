@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import traceback
+import logging
 from threading import Thread
 from concurrent import futures
 #from multiprocessing import Array, Manager, Value
@@ -49,6 +50,8 @@ K8S_APP = os.environ["K8S_APP"]  # K8s label app
 PN = os.environ["PN"] # Number of processes
 TN = os.environ["TN"] # Number of thread per process
 traceEscapeString = "__"
+
+app.logger.setLevel(logging.INFO)
 
 #globalDict=Manager().dict()
 globalDict=dict()
