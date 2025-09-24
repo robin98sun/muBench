@@ -14,5 +14,5 @@
    },
    "InternalServiceFilePath": "CustomFunctions",
    "OutputPath": "SimulationWorkspace",
-   "WorkModelPath": "Examples/workmodel-serial-10services.json"
+   "WorkModelPath": "Examples/workmodel-serial-10service-grpc.json"
 }
