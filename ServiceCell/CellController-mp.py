@@ -74,12 +74,18 @@ if "request_method" in globalDict['work_model'][ID].keys():
 else:
     request_method = "rest"
 
+app.logger.info(f'ID: {ID}')
+app.logger.info(f'ZONE: {ZONE}')
+app.logger.info(f'K8S_APP: {K8S_APP}')
+app.logger.info(f'PN: {PN}')
+app.logger.info(f'TN: {TN}')
 app.logger.info(f'request_method: {request_method}')
 app.logger.info(f'globalDict: {globalDict}')
 app.logger.info(f'globalDict["work_model"]: {globalDict["work_model"]}')
 app.logger.info(f'globalDict["work_model"][ID]: {globalDict["work_model"][ID]}')
 app.logger.info(f'globalDict["work_model"][ID]["request_method"]: {globalDict["work_model"][ID]["request_method"]}')
 app.logger.info(f'globalDict["work_model"][ID]["request_method"].lower(): {globalDict["work_model"][ID]["request_method"].lower()}')
+
 
 
 ########################### PROMETHEUS METRICS
