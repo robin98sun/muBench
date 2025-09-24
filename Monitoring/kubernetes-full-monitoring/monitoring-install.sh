@@ -241,5 +241,6 @@ echo "Prometheus URL: http://${master_ip}:30000"
 echo "Grafana URL: http://${master_ip}:30001"
 echo "Jaeger URL: http://${master_ip}:30002"
 echo "Kiali URL: http://${master_ip}:30003"
+echo "Nginx API Gateway URL: http://${master_ip}:31113"
 echo "----------------------------------------"
 
