@@ -50,8 +50,18 @@ K8S_APP = os.environ["K8S_APP"]  # K8s label app
 PN = os.environ["PN"] # Number of processes
 TN = os.environ["TN"] # Number of thread per process
 traceEscapeString = "__"
+logger_level = os.environ["LOGGER_LEVEL"]
 
-app.logger.setLevel(logging.INFO)
+if logger_level == "INFO":
+    app.logger.setLevel(logging.INFO)
+elif logger_level == "DEBUG":
+    app.logger.setLevel(logging.DEBUG)
+elif logger_level == "WARNING":
+    app.logger.setLevel(logging.WARNING)
+elif logger_level == "ERROR":
+    app.logger.setLevel(logging.ERROR)
+elif logger_level == "CRITICAL":
+    app.logger.setLevel(logging.CRITICAL)
 
 #globalDict=Manager().dict()
 globalDict=dict()
@@ -288,6 +298,7 @@ class gRPCThread(Thread, pb2_grpc.MicroServiceServicer):
 
 if __name__ == '__main__':
     if request_method == "rest":
+        app.logger.info('Starting REST server')
         init_REST(app)
         # Start Gunicorn HTTP REST Server (multi-process)
         options_gunicorn = {
@@ -296,8 +307,10 @@ if __name__ == '__main__':
             'config': "/app/gunicorn.conf.py",
             'threads':TN
         }
+        app.logger.info('Starting Gunicorn HTTP REST Server (multi-process)')
         HttpServer(app, options_gunicorn).run()
     elif request_method == "grpc":
+        app.logger.info('Starting gRPC server')
         my_work_model = globalDict['work_model'][ID]
         my_service_graph = my_work_model['external_services']
         init_gRPC(my_service_graph, globalDict['work_model'], gRPC_port,app)
@@ -305,6 +318,7 @@ if __name__ == '__main__':
         grpc_thread = gRPCThread()
         grpc_thread.run()
         # Flask HTTP REST server started for Prometheus metrics and for the entry point (s0) that anyway receives REST requests from API gateway
+        app.logger.info('Starting Flask HTTP REST server')
         app.run(host='0.0.0.0', port=8080, threaded=True)
     else:
         app.logger.info("Error: Unsupported request method")
