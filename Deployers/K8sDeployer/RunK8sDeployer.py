@@ -107,7 +107,7 @@ if not os.path.exists(f"{builder_module_path}/yamls"):
 folder = f"{builder_module_path}/yamls"
 
 
-if folder_not_exist or len(os.listdir(folder)) == 0:
+if not folder_not_exist and len(os.listdir(folder)) > 0:
 
     print("######################")
     print("!!!! Warning !!!!")
