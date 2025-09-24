@@ -50,18 +50,6 @@ K8S_APP = os.environ["K8S_APP"]  # K8s label app
 PN = os.environ["PN"] # Number of processes
 TN = os.environ["TN"] # Number of thread per process
 traceEscapeString = "__"
-logger_level = os.environ["LOGGER_LEVEL"]
-
-if logger_level == "INFO":
-    app.logger.setLevel(logging.INFO)
-elif logger_level == "DEBUG":
-    app.logger.setLevel(logging.DEBUG)
-elif logger_level == "WARNING":
-    app.logger.setLevel(logging.WARNING)
-elif logger_level == "ERROR":
-    app.logger.setLevel(logging.ERROR)
-elif logger_level == "CRITICAL":
-    app.logger.setLevel(logging.CRITICAL)
 
 #globalDict=Manager().dict()
 globalDict=dict()
@@ -83,6 +71,21 @@ if "request_method" in globalDict['work_model'][ID].keys():
     request_method = globalDict['work_model'][ID]["request_method"].lower()
 else:
     request_method = "rest"
+
+logger_level = "ERROR"
+if "logger_level" in globalDict['work_model'][ID].keys():   
+    logger_level = globalDict['work_model'][ID]["logger_level"]
+
+if logger_level == "INFO":
+    app.logger.setLevel(logging.INFO)
+elif logger_level == "DEBUG":
+    app.logger.setLevel(logging.DEBUG)
+elif logger_level == "WARNING":
+    app.logger.setLevel(logging.WARNING)
+elif logger_level == "ERROR":
+    app.logger.setLevel(logging.ERROR)
+elif logger_level == "CRITICAL":
+    app.logger.setLevel(logging.CRITICAL)
 
 app.logger.info(f'ID: {ID}')
 app.logger.info(f'ZONE: {ZONE}')
