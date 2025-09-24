@@ -1,7 +1,7 @@
 {
    "K8sParameters": {
       "prefix_yaml_file":"mubench",
-      "namespace": "default",
+      "namespace": "ms",
       "image": "msvcbench/microservice:latest",
       "cluster_domain": "cluster.local",
       "path": "/api/v1",
