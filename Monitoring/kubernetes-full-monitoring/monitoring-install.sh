@@ -2,6 +2,7 @@
 # Secure .kube
 microservice_namespace="ms"
 head_node_name="master"
+master_ip="master_ip"
 while [[ $# -gt 0 ]]; do
     case $1 in
         --ns=*)
@@ -10,6 +11,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --head-node-name=*)
             head_node_name="${1#*=}"
+            shift
+            ;;
+        --master-ip=*)
+            master_ip="${1#*=}"
             shift
             ;;
         *)
@@ -232,9 +237,9 @@ kubectl apply -f kiali-nodeport.yaml
 echo "Monitoring installation completed"
 echo "Grafana admin user: admin"
 echo "Grafana admin password: $(kubectl --namespace monitoring get secrets prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 -d)"
-echo "Prometheus URL: http://master_ip:30000"
-echo "Grafana URL: http://master_ip:30001"
-echo "Jaeger URL: http://master_ip:30002"
-echo "Kiali URL: http://master_ip:30003"
+echo "Prometheus URL: http://${master_ip}:30000"
+echo "Grafana URL: http://${master_ip}:30001"
+echo "Jaeger URL: http://${master_ip}:30002"
+echo "Kiali URL: http://${master_ip}:30003"
 echo "----------------------------------------"
 
