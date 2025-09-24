@@ -109,27 +109,20 @@ folder = f"{builder_module_path}/yamls"
 
 if folder_not_exist or len(os.listdir(folder)) == 0:
 
-    # keyboard_input = input("\nDirectory empty, wanna DEPLOY? (y)").lower() or "y"
-    keyboard_input = "y"
-
-    if keyboard_input == "y" or keyboard_input == "yes":
-        # Create YAML files
-        updated_folder_items, work_model = create_deployment_config()   
-        # Deploy YAML files
-        if not no_apply:
-            K8sYamlDeployer.deploy_items(folder, st=k8s_parameters['sleep'])
-    else:
-        print("...\nOk you do not want to DEPLOY stuff! Bye!")
-else:
     print("######################")
     print("!!!! Warning !!!!")
     print("######################")
     print(f"Folder is not empty: {folder}.")
-    keyboard_input = input("Do you want to UNDEPLOY yamls of the old application first, delete the files and then start the new applicaiton ? (n) ") or "n"
-    if keyboard_input == "y" or keyboard_input == "yes":
-        if not no_apply:
-            K8sYamlDeployer.undeploy_items(folder)
-        remove_files(folder)
-    else:
-        print("...\nOk you want to keep the OLD application! Bye!")
+    print("undeploying existing application")
+    if not no_apply:
+        K8sYamlDeployer.undeploy_items(folder)
+    remove_files(folder)
+
+print("--------------------------------")
+print("creating new application")
+# Create YAML files
+updated_folder_items, work_model = create_deployment_config()   
+# Deploy YAML files
+if not no_apply:
+    K8sYamlDeployer.deploy_items(folder, st=k8s_parameters['sleep'])
 
