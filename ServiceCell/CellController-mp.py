@@ -62,6 +62,7 @@ def read_config_files():
             app.logger.info(f'service: {service}')
             if service==ID:
                 res[service]=workmodel[service]
+                res[service]["host_files"] = dict()
                 if "host_files" in workmodel[service].keys():
                     for host_file in workmodel[service]["host_files"]:
                         if "name" in host_file.keys() and "mount_path" in host_file.keys() and "host_path" in host_file.keys():
@@ -74,8 +75,6 @@ def read_config_files():
                                 else:
                                     res[service]["host_files"][host_file["name"]] = hf.read()
                                 hf.close()
-                else:
-                    res[service]["host_files"] = dict()
             else:
                 res[service]={"url":workmodel[service]["url"],"path":workmodel[service]["path"]}
     return res
