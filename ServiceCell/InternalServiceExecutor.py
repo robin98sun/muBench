@@ -29,7 +29,8 @@ class InternalServiceExecutor(threading.Thread):
     def run(self):
         self.log(f"Internal service function: {self.internal_service_function}")
         self.log(f"Internal service params: {self.params}")
-        self.response.set_body(self.internal_service_function(self.params, self.log))
+        self.params["_logger_"] = self.log
+        self.response.set_body(self.internal_service_function(self.params))
         # self.response.set_body(eval(self.internal_service_function))
 
 
@@ -86,6 +87,10 @@ def run_internal_service(internal_service_params, logger = None):
     global internal_service_function, internal_service_params_v
     if internal_service_function == None:
         set_internal_service_function(internal_service_params)
+
+    if logger:
+        logger(f"Internal service params: {internal_service_params}")
+        logger(f"Internal service params_v: {internal_service_params_v}")
     #function_name = list(internal_service_params)[0]
     #internal_service_params_v = list(internal_service_params.values())[0]
     # response = list()

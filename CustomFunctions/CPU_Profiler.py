@@ -1,7 +1,14 @@
 import time
-def cpu_profiler(i, logger = None):
+def cpu_profiler(params):
+    logger = None
+    if "_logger_" in params:
+        logger = params["_logger_"]
+    i = 0
+    if "i" in params:
+        i = params["i"]
     if logger:
-        logger(f"CPU profiler started with input: {i}")
+        del params["_logger_"]
+        logger(f"CPU profiler started with params: {params}")
     start_time = time.time()
     cpu_load = i
     pi_greco = list()
