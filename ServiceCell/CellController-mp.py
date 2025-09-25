@@ -284,6 +284,7 @@ def start_worker():
         body = None
         if is_ms_trace(trace):
             if my_internal_service is not None and len(my_internal_service)>0:
+                app.logger.debug(f'globalDict["work_model"][ID]["host_files"]: {globalDict["work_model"][ID]["host_files"]}')
                 body = run_internal_service_ms_trace(my_internal_service, logger=app.logger.debug, host_files=globalDict['work_model'][ID]["host_files"])
             else:
                 body = "no internal service"
