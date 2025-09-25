@@ -80,8 +80,8 @@ def read_config_files():
             app.logger.info(f'service: {service}')
             if service==ID:
                 res[service]=workmodel[service]
-                res[service]["host_files"] = dict()
-                if "host_files" in workmodel[service].keys():
+                res[service]["_host_files_"] = dict()
+                if "host_files" in workmodel[service]:
                     for host_file in workmodel[service]["host_files"]:
                         app.logger.debug(f'read host file item {host_file}')
                         if "name" in host_file.keys() and "mount_path" in host_file.keys() and "host_path" in host_file.keys():
@@ -90,11 +90,12 @@ def read_config_files():
                                 continue
                             with open(host_file["mount_path"], 'r') as hf:
                                 if host_file["host_path"].split(".")[-1] == "json":
-                                    res[service]["host_files"][host_file["name"]] = json.load(hf)
+                                    res[service]["_host_files_"][host_file["name"]] = json.load(hf)
                                 else:
-                                    res[service]["host_files"][host_file["name"]] = hf.read()
+                                    res[service]["_host_files_"][host_file["name"]] = hf.read()
                                 hf.close()
                             app.logger.debug(f'read host file {host_file["name"]} from its mount path {host_file["mount_path"]} whos host path is {host_file["host_path"]}')
+                res[service]["host_files"] = res[service]["_host_files_"]
             else:
                 res[service]={"url":workmodel[service]["url"],"path":workmodel[service]["path"]}
     return res
