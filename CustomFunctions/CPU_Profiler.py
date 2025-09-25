@@ -4,8 +4,8 @@ def cpu_profiler(params):
     if "_logger_" in params:
         logger = params["_logger_"]
     i = 0
-    if "i" in params:
-        i = params["i"]
+    if "latency" in params:
+        i = params["latency"]
     if logger:
         del params["_logger_"]
         logger(f"CPU profiler started with params: {params}")

@@ -100,3 +100,19 @@ def run_internal_service(internal_service_params, logger = None):
     thread.start()
     thread.join()
     return response.get_body()
+
+def run_internal_service_ms_trace(internal_service_params, logger = None):
+    global internal_service_function, internal_service_params_v
+    if internal_service_function == None:
+        function_name = internal_service_params["name"]
+        internal_service_params_v = internal_service_params["params"]
+        internal_service_function = eval(function_name)
+
+    if logger:
+        logger(f"Internal service params: {internal_service_params}")
+        logger(f"Internal service params_v: {internal_service_params_v}")
+    response = ThreadReturnedValue()
+    thread = InternalServiceExecutor(internal_service_function, internal_service_params_v, response, logger)
+    thread.start()
+    thread.join()
+    return response.get_body()

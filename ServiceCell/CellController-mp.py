@@ -16,8 +16,8 @@ from flask import Flask, Response, json, make_response, request
 import prometheus_client
 from prometheus_client import CollectorRegistry, Summary, multiprocess, Histogram
 
-from ExternalServiceExecutor import init_REST, init_gRPC, run_external_service
-from InternalServiceExecutor import run_internal_service
+from ExternalServiceExecutor import init_REST, init_gRPC, run_external_service, run_external_service_ms_trace
+from InternalServiceExecutor import run_internal_service, run_internal_service_ms_trace
 
 import mub_pb2_grpc as pb2_grpc
 import mub_pb2 as pb2
@@ -139,8 +139,12 @@ def start_worker():
         
         # default behaviour
         my_work_model = globalDict['work_model'][ID]
-        my_service_graph = my_work_model['external_services'] 
-        my_internal_service = my_work_model['internal_service']
+        my_service_graph = None
+        my_internal_service = None
+        if "external_services" in my_work_model.keys():
+            my_service_graph = my_work_model['external_services'] 
+        if "internal_service" in my_work_model.keys():
+            my_internal_service = my_work_model['internal_service']
 
         # update internal service behaviour
         if behaviour_id != 'default' and "alternative_behaviors" in my_work_model.keys():
@@ -155,13 +159,83 @@ def start_worker():
             if val is not None:
                 jaeger_headers[jhdr] = val
 
+
+
+        # ms trace data format:
+        # {
+        #     "trace-type": "ms-trace",
+        #     "internal_service": {
+        #         "name": "cpu_profiler",
+        #         "params": {
+        #             "latency": 10,
+        #         }
+        #     },
+        #     "external_services": [
+        #         [
+        #           {
+        #             "name": "s1",
+        #             "input": {
+        #                 "internal_service": {
+        #                     "name": "cpu_profiler",
+        #                     "params": {
+        #                         "latency": 10,
+        #                     }
+        #                 },
+        #                 "external_services": [
+        #                     {
+        #                         "name": "s2",
+        #                         "input": {
+        #                             "internal_service": {
+        #                                 "name": "cpu_profiler",
+        #                                 "params": {
+        #                                     "latency": 10,
+        #                                 }
+        #                             },
+        #                             "external_services": [
+        #                                 {
+        #                                     "name": "s3",
+        #                                     "input": {
+        #                                         "internal_service": {
+        #                                             "name": "cpu_profiler",
+        #                                             "params": {
+        #                                                 "latency": 10,
+        #                                             }
+        #                                         },
+        #                                     }
+        #                                 }
+        #                             ]
+        #                         }
+        #                     }
+        #                 ]
+        #             }
+        #           },
+        #         ...
+        #       ],
+        #       [
+        #         {
+        #           "name": "s4",
+        #           "input": {
+        #             "internal_service": {
+        #               "name": "cpu_profiler",
+        #               "params": {
+        #                 "latency": 10,
+        #               }
+        #             },
+        #             "external_services": [
+        #               {
+        #                 "name": "s5",
+        #       ...
+        #     ]
+        # }
+        def is_ms_trace(trace):
+            return trace is not None and"trace-type" in trace and trace["trace-type"] == "ms-trace"
+
         # if POST check the presence of a trace
         trace=dict()
         if request.method == 'POST':
             trace = request.json
-            app.logger.debug(f'trace: {trace}')
-            if "trace-type" in trace and trace["trace-type"] == "ms-trace":
-                pass
+            if is_ms_trace(trace):
+                app.logger.debug(f'trace: {trace}')
             else:
                 # sanity_check
                 assert len(trace.keys())==1, 'bad trace format'
@@ -169,9 +243,10 @@ def start_worker():
                 trace[ID] = trace[list(trace)[0]] # We insert 1 more key "s0": [value] 
                 app.logger.debug(f'trace after insertion: {trace}')
 
-        if "trace-type" in trace and trace["trace-type"] == "ms-trace":
-            my_internal_service = my_internal_service.copy()
-            my_internal_service["ms-trace-input"] = trace
+        if is_ms_trace(trace):
+            if "internal_service" in trace.keys() and trace["internal_service"] is not None and len(trace["internal_service"])>0:
+                my_internal_service = trace["internal_service"]
+
         elif len(trace)>0:
         # (mubench trace)-driven request
             n_groups = len(trace[ID])
@@ -192,7 +267,15 @@ def start_worker():
         # Execute the internal service
         app.logger.info("*************** INTERNAL SERVICE STARTED ***************")
         start_local_processing = time.time()
-        body = run_internal_service(my_internal_service, logger=app.logger.debug)
+
+        body = None
+        if is_ms_trace(trace):
+            if my_internal_service is not None and len(my_internal_service)>0:
+                body = run_internal_service_ms_trace(my_internal_service, logger=app.logger.debug)
+            else:
+                body = "no internal service"
+        else:
+            body = run_internal_service(my_internal_service, logger=app.logger.debug)
         
         local_processing_latency = time.time() - start_local_processing
         INTERNAL_PROCESSING.labels(ZONE, K8S_APP, request.method, request.path).observe(local_processing_latency*1000)
@@ -205,16 +288,23 @@ def start_worker():
         start_external_request_processing = time.time()
         app.logger.info("*************** EXTERNAL SERVICES STARTED ***************")
         
-        if len(my_service_graph) > 0:
+        service_error_dict = dict()
+        if is_ms_trace(trace):
+            if "external_services" in trace.keys() and trace["external_services"] is not None and len(trace["external_services"])>0:
+                my_service_graph = trace["external_services"]
+                service_error_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers)
+
+        elif len(my_service_graph) > 0:
             if len(trace)>0:
                 service_error_dict = run_external_service(my_service_graph,globalDict['work_model'],query_string,trace[ID],app, jaeger_headers)
             else:
                 service_error_dict = run_external_service(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers)
-            if len(service_error_dict):
-                app.logger.error(service_error_dict)
-                app.logger.error("Error in request external services")
-                app.logger.error(service_error_dict)
-                return make_response(json.dumps({"message": "Error in external services request"}), 500)
+        
+        if len(service_error_dict):
+            app.logger.error(service_error_dict)
+            app.logger.error("Error in request external services")
+            app.logger.error(service_error_dict)
+            return make_response(json.dumps({"message": "Error in external services request"}), 500)
         app.logger.info("############### EXTERNAL SERVICES FINISHED! ###############")
 
         response = make_response(body)
