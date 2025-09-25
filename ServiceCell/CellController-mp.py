@@ -132,8 +132,9 @@ def start_worker():
     try:
         start_request_processing = time.time()
         app.logger.info('Request Received via REST')
-        
+        app.logger.info(f'query_string: {request.query_string}')
         query_string = request.query_string.decode()
+        app.logger.info(f'query_string after decoding: {query_string}')
         behaviour_id = request.args.get('bid', default = 'default', type = str)
         
         # default behaviour
