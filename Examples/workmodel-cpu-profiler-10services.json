@@ -14,7 +14,7 @@
             "host_path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
         }
       ],
-      "logger_level": "DEBUG"
+      "logger_level": "ERROR"
     },
     "s1": {
       "request_method": "rest",
