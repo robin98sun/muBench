@@ -114,10 +114,11 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 host_files_mount_paths = []
                 host_files_volumes = []
                 for host_file in workmodel[service]["host_files"]:
-                    # Convert underscores to hyphens for Kubernetes compliance
-                    volume_name = host_file['name'].replace('_', '-')
-                    host_files_mount_paths.append(f"- name: {volume_name}\n              mountPath: /app/{host_file['name']}\n              readOnly: true")
-                    host_files_volumes.append(f"- name: {volume_name}\n          hostPath:\n            path: {host_file['path']}\n            type: File")
+                    if "name" in host_file.keys() and "mount_path" in host_file.keys() and "host_path" in host_file.keys():
+                        # Convert underscores to hyphens for Kubernetes compliance
+                        volume_name = host_file['name'].replace('_', '-')
+                        host_files_mount_paths.append(f"- name: {volume_name}\n              mountPath: /app/{host_file['mount_path']}\n              readOnly: true")
+                        host_files_volumes.append(f"- name: {volume_name}\n          hostPath:\n            path: {host_file['host_path']}\n            type: File")
                 f = f.replace("{{HOST_FILES_MOUNT_PATHS}}", "\n            ".join(host_files_mount_paths))
                 f = f.replace("{{HOST_FILES_VOLUMES}}", "\n        ".join(host_files_volumes))
             else:

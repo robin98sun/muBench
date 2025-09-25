@@ -62,6 +62,17 @@ def read_config_files():
             app.logger.info(f'service: {service}')
             if service==ID:
                 res[service]=workmodel[service]
+                if "host_files" in workmodel[service].keys():
+                    for host_file in workmodel[service]["host_files"]:
+                        if "name" in host_file.keys() and "mount_path" in host_file.keys() and "host_path" in host_file.keys():
+                            with open(host_file["mount_path"], 'r') as hf:
+                                if host_file["host_path"].split(".")[-1] == "json":
+                                    res[service]["host_files"][host_file["name"]] = json.loads(hf.read())
+                                else:
+                                    res[service]["host_files"][host_file["name"]] = hf.read()
+                                hf.close()
+                else:
+                    res[service]["host_files"] = dict()
             else:
                 res[service]={"url":workmodel[service]["url"],"path":workmodel[service]["path"]}
     return res
@@ -271,11 +282,11 @@ def start_worker():
         body = None
         if is_ms_trace(trace):
             if my_internal_service is not None and len(my_internal_service)>0:
-                body = run_internal_service_ms_trace(my_internal_service, logger=app.logger.debug)
+                body = run_internal_service_ms_trace(my_internal_service, logger=app.logger.debug, host_files=globalDict['work_model'][ID]["host_files"])
             else:
                 body = "no internal service"
         else:
-            body = run_internal_service(my_internal_service, logger=app.logger.debug)
+            body = run_internal_service(my_internal_service, logger=app.logger.debug, host_files=globalDict['work_model'][ID]["host_files"])
         
         local_processing_latency = time.time() - start_local_processing
         INTERNAL_PROCESSING.labels(ZONE, K8S_APP, request.method, request.path).observe(local_processing_latency*1000)
