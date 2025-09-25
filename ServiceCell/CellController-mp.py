@@ -50,7 +50,25 @@ K8S_APP = os.environ["K8S_APP"]  # K8s label app
 PN = os.environ["PN"] # Number of processes
 TN = os.environ["TN"] # Number of thread per process
 traceEscapeString = "__"
+LOGGER_LEVEL = os.environ["LOGGER_LEVEL"].upper()
+if LOGGER_LEVEL == "INFO":
+    app.logger.setLevel(logging.INFO)
+elif LOGGER_LEVEL == "DEBUG":
+    app.logger.setLevel(logging.DEBUG)
+elif LOGGER_LEVEL == "WARNING":
+    app.logger.setLevel(logging.WARNING)
+elif LOGGER_LEVEL == "ERROR":
+    app.logger.setLevel(logging.ERROR)
+elif LOGGER_LEVEL == "CRITICAL":
+    app.logger.setLevel(logging.CRITICAL)
 
+
+app.logger.debug(f'ID: {ID}')
+app.logger.debug(f'ZONE: {ZONE}')
+app.logger.debug(f'K8S_APP: {K8S_APP}')
+app.logger.debug(f'PN: {PN}')
+app.logger.debug(f'TN: {TN}')
+app.logger.debug(f'LOGGER_LEVEL: {LOGGER_LEVEL}')
 #globalDict=Manager().dict()
 globalDict=dict()
 def read_config_files():
@@ -89,26 +107,6 @@ if "request_method" in globalDict['work_model'][ID].keys():
 else:
     request_method = "rest"
 
-logger_level = "ERROR"
-if "logger_level" in globalDict['work_model'][ID].keys():   
-    logger_level = globalDict['work_model'][ID]["logger_level"].upper()
-
-if logger_level == "INFO":
-    app.logger.setLevel(logging.INFO)
-elif logger_level == "DEBUG":
-    app.logger.setLevel(logging.DEBUG)
-elif logger_level == "WARNING":
-    app.logger.setLevel(logging.WARNING)
-elif logger_level == "ERROR":
-    app.logger.setLevel(logging.ERROR)
-elif logger_level == "CRITICAL":
-    app.logger.setLevel(logging.CRITICAL)
-
-app.logger.debug(f'ID: {ID}')
-app.logger.debug(f'ZONE: {ZONE}')
-app.logger.debug(f'K8S_APP: {K8S_APP}')
-app.logger.debug(f'PN: {PN}')
-app.logger.debug(f'TN: {TN}')
 app.logger.debug(f'request_method: {request_method}')
 
 ########################### PROMETHEUS METRICS

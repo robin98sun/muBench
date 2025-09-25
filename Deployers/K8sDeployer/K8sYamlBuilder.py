@@ -85,6 +85,10 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 f = f.replace("{{TN}}", f'\'{workmodel[service]["threads"]}\'')
             else:
                 f = f.replace("{{TN}}", "\'4\'")
+            if "logger_level" in workmodel[service].keys():
+                f = f.replace("{{LOGGER_LEVEL}}", f'\'{workmodel[service]["logger_level"]}\'')
+            else:
+                f = f.replace("{{LOGGER_LEVEL}}", "\'ERROR\'")
             
             rank_string='' # ranck string is used to order the yaml file as a funciont of the cpu-requests 
             if  len(set(workmodel[service].keys()).intersection({"cpu-limits","memory-limits","cpu-requests","memory-requests"})):

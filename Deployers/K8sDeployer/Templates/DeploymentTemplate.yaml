@@ -61,6 +61,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: LOGGER_LEVEL
+              value: {{LOGGER_LEVEL}}
 
           resources: {{RESOURCES}}    
         
