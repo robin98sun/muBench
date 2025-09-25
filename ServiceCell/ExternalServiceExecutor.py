@@ -39,7 +39,7 @@ def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             headers.update(jaeger_context)
             json_payload = json.dumps(ms_trace_input)
-            app.logger.debug(f'Requesting external service via REST: {service["name"]}')
+            app.logger.debug(f'Requesting external service via REST: {service}')
             return s.post(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}',data=json_payload,headers=headers)
 
         elif len(trace)==0 and len(query_string)==0:
@@ -161,15 +161,15 @@ def request_external_service_ms_trace(service_series, id, work_model, s, trace, 
         service_input["trace_type"] = "ms-trace"
         try:
             r = request_function(service_name,id,work_model,s,trace,query_string, app, trace_context, ms_trace_input=service_input)
-            app.logger.info("Service: %s -> Status_code: %s -- len(text): %d" % (service["name"], r.status_code, len(r.text)))
+            app.logger.info("Service: %s -> Status_code: %s -- len(text): %d" % (service_name, r.status_code, len(r.text)))
             if len(r.text) < 100:
-                app.logger.info("Service: %s -> Status_code: %s -- text: %s" % (service["name"], r.status_code, r.text))
+                app.logger.info("Service: %s -> Status_code: %s -- text: %s" % (service_name, r.status_code, r.text))
             if type(r.status_code) == bool and not r.status_code:
-                raise Exception(f"Error in external service: {service["name"]} -- (gRPC) status_code: {r.status_code}")
+                raise Exception(f"Error in external service: {service_name} -- (gRPC) status_code: {r.status_code}")
             elif type(r.status_code) == int and r.status_code != 200:
-                raise Exception(f"Error in external service: {service} -- (REST) status_code: {r.status_code}")
+                raise Exception(f"Error in external service: {service_name} -- (REST) status_code: {r.status_code}")
         except Exception as err:
-            app.logger.error("Error in request external service %s -- %s" % (service["name"], str(err)))
+            app.logger.error("Error in request external service %s -- %s" % (service_name, str(err)))
             service_error_dict[service_name] = err
             service_error_flag = True
     app.logger.info("#### SERVICE Done!")
