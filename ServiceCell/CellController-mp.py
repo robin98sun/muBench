@@ -71,7 +71,7 @@ def read_config_files():
                                 continue
                             with open(host_file["mount_path"], 'r') as hf:
                                 if host_file["host_path"].split(".")[-1] == "json":
-                                    res[service]["host_files"][host_file["name"]] = json.loads(hf.read())
+                                    res[service]["host_files"][host_file["name"]] = json.load(hf)
                                 else:
                                     res[service]["host_files"][host_file["name"]] = hf.read()
                                 hf.close()
@@ -79,6 +79,8 @@ def read_config_files():
                 res[service]={"url":workmodel[service]["url"],"path":workmodel[service]["path"]}
     return res
 globalDict['work_model'] = read_config_files()    # must be shared among processes for hot update
+
+app.logger.debug(f'globalDict["work_model"][ID]["host_files"]: {globalDict["work_model"][ID]["host_files"]}')
 
 if "request_method" in globalDict['work_model'][ID].keys():
     request_method = globalDict['work_model'][ID]["request_method"].lower()
