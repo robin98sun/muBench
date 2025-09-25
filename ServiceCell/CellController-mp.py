@@ -244,7 +244,7 @@ def start_worker():
                 app.logger.debug(f'trace after insertion: {trace}')
 
         if is_ms_trace(trace):
-            if "internal_services" in trace.keys() and trace["internal_services"] is not None and len(trace["internal_services"])>0:
+            if "internal_service" in trace.keys() and trace["internal_service"] is not None and len(trace["internal_service"])>0:
                 my_internal_service = trace["internal_service"]
 
         elif len(trace)>0:
