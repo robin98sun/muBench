@@ -149,7 +149,7 @@ def run_external_service(services_group, work_model, query_string, trace, app, t
 
 # for MS TRACE, the service_series is a list of services to be called in sequence
 def request_external_service_ms_trace(service_series, id, work_model, s, trace, query_string, app, trace_context):
-    app.logger.info("**** Start SERVICES in thread: %s (via MS TRACE)" % str(service_series))
+    app.logger.info("**** Start SERVICES in thread: %s (via MS TRACE)" % str([service["name"] for service in service_series]))
 
     service_error_dict = dict()
     service_error_flag = False
