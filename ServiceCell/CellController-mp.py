@@ -62,7 +62,6 @@ elif LOGGER_LEVEL == "ERROR":
 elif LOGGER_LEVEL == "CRITICAL":
     app.logger.setLevel(logging.CRITICAL)
 
-
 app.logger.debug(f'ID: {ID}')
 app.logger.debug(f'ZONE: {ZONE}')
 app.logger.debug(f'K8S_APP: {K8S_APP}')
