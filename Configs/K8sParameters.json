@@ -22,7 +22,7 @@
          "key": "node-role.cosched.io/general-worker",
          "values": ["true"]
       },
-      "ms-replica": 2
+      "ms-replica": 1
    },
    "InternalServiceFilePath": "CustomFunctions",
    "OutputPath": "SimulationWorkspace",
