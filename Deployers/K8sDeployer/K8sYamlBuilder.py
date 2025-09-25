@@ -13,7 +13,7 @@ POD_ANTIAFFINITI_TEMPLATE = {'affinity':{'podAntiAffinity':{'requiredDuringSched
 # Override work_model params with those in k8s_parameters
 def customization_work_model(workmodel, k8s_parameters):
     for service in workmodel:
-        workmodel[service].update({"url": f"{service}.{k8s_parameters['namespace']}.svc.{k8s_parameters['cluster_domain']}.local"})
+        workmodel[service].update({"url": f"{service}.{k8s_parameters['namespace']}.svc.{k8s_parameters['cluster_domain']}"})
         workmodel[service].update({"path": k8s_parameters['path']})
         workmodel[service].update({"image": k8s_parameters['image']})
         workmodel[service].update({"namespace": k8s_parameters['namespace']})
