@@ -7,6 +7,7 @@ import jsonmerge
 
 internal_service_function = None
 internal_service_params_v = None
+internal_service_function_dict = None
 
 # Dinamyc import of all function in InternalServiceFunctions folder
 for path in glob.glob('MSConfig/InternalServiceFunctions/[!_]*.py'):
@@ -100,13 +101,20 @@ def run_internal_service(internal_service_params, logger = None, host_files = di
     return response.get_body()
 
 def run_internal_service_ms_trace(internal_service_params, logger = None, host_files = dict()):
-    global internal_service_function
-    if internal_service_function == None:
-        function_name = internal_service_params["name"]
-        internal_service_function = eval(function_name)
+    global internal_service_function_dict
+
+    function_name = internal_service_params["name"]
+
+    if internal_service_function_dict == None or len(internal_service_function_dict) == 0:
+        internal_service_function_dict = dict()
+    
+    if function_name not in internal_service_function_dict.keys():
+        internal_service_function_dict[function_name] = eval(function_name)
+    
+    internal_service_function_body = internal_service_function_dict[function_name]
 
     response = ThreadReturnedValue()
-    thread = InternalServiceExecutor(internal_service_function, internal_service_params["params"].copy(), response, logger, host_files)
+    thread = InternalServiceExecutor(internal_service_function_body, internal_service_params["params"].copy(), response, logger, host_files)
     thread.start()
     thread.join()
     return response.get_body()
