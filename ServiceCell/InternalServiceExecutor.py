@@ -29,8 +29,6 @@ class InternalServiceExecutor(threading.Thread):
 
     def run(self):
         self.log(f"Internal service function: {self.internal_service_function}")
-        self.log(f"Internal service params: {self.params}")
-        
         self.params["_logger_"] = self.log
         self.params["_host_files_"] = self.host_files
         self.response.set_body(self.internal_service_function(self.params))
