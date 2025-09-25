@@ -23,7 +23,7 @@
          "values": ["true"]
       },
       "ms-replica": 1,
-      "host_files": [
+      "host-files": [
         {
             "name": "cpu-profiling-result", 
             "mount_path": "/app/cpu_profiling_result.json",
