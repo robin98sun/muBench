@@ -158,7 +158,7 @@ def request_external_service_ms_trace(service_series, id, work_model, s, trace, 
             continue
         service_name = service["name"]
         service_input = service["input"]
-        service_input["trace-type"] = "ms-trace"
+        service_input["trace_type"] = "ms-trace"
         try:
             r = request_function(service_name,id,work_model,s,trace,query_string, app, trace_context, ms_trace_input=service_input)
             app.logger.info("Service: %s -> Status_code: %s -- len(text): %d" % (service, r.status_code, len(r.text)))

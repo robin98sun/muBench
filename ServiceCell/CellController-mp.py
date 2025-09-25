@@ -163,7 +163,7 @@ def start_worker():
 
         # ms trace data format:
         # {
-        #     "trace-type": "ms-trace",
+        #     "trace_type": "ms-trace",
         #     "internal_service": {
         #         "name": "cpu_profiler",
         #         "params": {
@@ -228,7 +228,7 @@ def start_worker():
         #     ]
         # }
         def is_ms_trace(trace):
-            return trace is not None and"trace-type" in trace and trace["trace-type"] == "ms-trace"
+            return trace is not None and"trace_type" in trace and trace["trace_type"] == "ms-trace"
 
         # if POST check the presence of a trace
         trace=dict()
@@ -244,7 +244,7 @@ def start_worker():
                 app.logger.debug(f'trace after insertion: {trace}')
 
         if is_ms_trace(trace):
-            if "internal_service" in trace.keys() and trace["internal_service"] is not None and len(trace["internal_service"])>0:
+            if "internal_services" in trace.keys() and trace["internal_services"] is not None and len(trace["internal_services"])>0:
                 my_internal_service = trace["internal_service"]
 
         elif len(trace)>0:
