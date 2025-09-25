@@ -21,7 +21,8 @@
       "worker-node-affinity": {
          "key": "node-role.cosched.io/general-worker",
          "values": ["true"]
-      }
+      },
+      "ms-replica": 2
    },
    "InternalServiceFilePath": "CustomFunctions",
    "OutputPath": "SimulationWorkspace",

@@ -65,7 +65,10 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 f = f.replace("{{SIDECAR}}", SIDECAR_TEMPLATE % (service, workmodel[service]["sidecar"]))
             else:
                 f = f.replace("{{SIDECAR}}", "".rstrip())
-            if "replicas" in workmodel[service].keys():
+            
+            if "ms-replica" in k8s_parameters.keys():
+                f = f.replace("{{MS_REPLICAS}}", str(k8s_parameters["ms-replica"]))
+            elif "replicas" in workmodel[service].keys():
                 f = f.replace("{{REPLICAS}}", str(workmodel[service]["replicas"]))
             else:
                 f = f.replace("{{REPLICAS}}", "1")
