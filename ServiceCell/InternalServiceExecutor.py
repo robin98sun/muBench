@@ -15,14 +15,21 @@ for path in glob.glob('MSConfig/InternalServiceFunctions/[!_]*.py'):
 
 
 class InternalServiceExecutor(threading.Thread):
-    def __init__(self, internal_service_function, params, response):
+    def __init__(self, internal_service_function, params, response, logger = None):
         threading.Thread.__init__(self)
         self.params = params
         self.internal_service_function = internal_service_function
         self.response = response
+        self.logger = logger
+    
+    def log(self, message):
+        if self.logger:
+            self.logger.debug(message)
 
     def run(self):
-        self.response.set_body(self.internal_service_function(self.params))
+        self.log(f"Internal service function: {self.internal_service_function}")
+        self.log(f"Internal service params: {self.params}")
+        self.response.set_body(self.internal_service_function(self.params, self.log))
         # self.response.set_body(eval(self.internal_service_function))
 
 
@@ -75,7 +82,7 @@ def set_internal_service_function(internal_service_params):
     internal_service_params_v = list(internal_service_params.values())[0]
     internal_service_function = eval(function_name)
 
-def run_internal_service(internal_service_params):
+def run_internal_service(internal_service_params, logger = None):
     global internal_service_function, internal_service_params_v
     if internal_service_function == None:
         set_internal_service_function(internal_service_params)
@@ -84,7 +91,7 @@ def run_internal_service(internal_service_params):
     # response = list()
     # response = dict()
     response = ThreadReturnedValue()
-    thread = InternalServiceExecutor(internal_service_function, internal_service_params_v, response)
+    thread = InternalServiceExecutor(internal_service_function, internal_service_params_v, response, logger)
     thread.start()
     thread.join()
     return response.get_body()
