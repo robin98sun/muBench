@@ -33,16 +33,15 @@ def init_gRPC(my_service_graph, workmodel, server_port, app):
             service_stub[service] = pb2_grpc.MicroServiceStub(channel)
 
 def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context):
-    app.logger.info(f'Requesting external service via REST: {service}')
-    app.logger.info(f'jaeger_context: {jaeger_context}')
-    app.logger.info(f'work_model: {work_model}')
-    app.logger.info(f'trace: {trace}')
-    app.logger.info(f'query_string: {query_string}')
-    
     try:
-       
-        service_no_escape = service.split("__")[0]
+        app.logger.info(f'Requesting external service via REST: {service}')
+        app.logger.info(f'jaeger_context: {jaeger_context}')
+        app.logger.info(f'work_model: {work_model}')
 
+        app.logger.info(f'trace: {trace}')
+        app.logger.info(f'query_string: {query_string}')
+        service_no_escape = service.split("__")[0]
+        
         if len(trace)==0 and len(query_string)==0:
             # default 
             return s.get(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}', headers=jaeger_context)
