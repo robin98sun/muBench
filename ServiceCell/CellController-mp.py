@@ -65,6 +65,7 @@ def read_config_files():
                 res[service]["host_files"] = dict()
                 if "host_files" in workmodel[service].keys():
                     for host_file in workmodel[service]["host_files"]:
+                        app.logger.debug(f'read host file item {host_file}')
                         if "name" in host_file.keys() and "mount_path" in host_file.keys() and "host_path" in host_file.keys():
                             if not os.path.exists(host_file["mount_path"]):
                                 app.logger.error(f'host file {host_file["name"]} not found at its mount path {host_file["mount_path"]}')
@@ -75,6 +76,7 @@ def read_config_files():
                                 else:
                                     res[service]["host_files"][host_file["name"]] = hf.read()
                                 hf.close()
+                            app.logger.debug(f'read host file {host_file["name"]} from its mount path {host_file["mount_path"]} whos host path is {host_file["host_path"]}')
             else:
                 res[service]={"url":workmodel[service]["url"],"path":workmodel[service]["path"]}
     return res
