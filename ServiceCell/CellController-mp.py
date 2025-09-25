@@ -65,6 +65,9 @@ def read_config_files():
                 if "host_files" in workmodel[service].keys():
                     for host_file in workmodel[service]["host_files"]:
                         if "name" in host_file.keys() and "mount_path" in host_file.keys() and "host_path" in host_file.keys():
+                            if not os.path.exists(host_file["mount_path"]):
+                                app.logger.error(f'host file {host_file["name"]} not found at its mount path {host_file["mount_path"]}')
+                                continue
                             with open(host_file["mount_path"], 'r') as hf:
                                 if host_file["host_path"].split(".")[-1] == "json":
                                     res[service]["host_files"][host_file["name"]] = json.loads(hf.read())
