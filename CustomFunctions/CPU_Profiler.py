@@ -40,9 +40,9 @@ def select_input_values_according_to_profiling(profiling_result, latency_ms):
                 break
         # if not found, it means the remaining latency is too small 
         if not selected:
-            if remaining_latency > 0:
-                selected_input_values.append(statistics[0]['input_value'])
-                remaining_latency -= statistics[0]['mean']
+            # if remaining_latency > 0:
+            #     selected_input_values.append(statistics[0]['input_value'])
+            #     remaining_latency -= statistics[0]['mean']
             break
     
     return selected_input_values
