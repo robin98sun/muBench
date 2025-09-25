@@ -13,17 +13,14 @@
       "nginx-image": "nginx",
       "no-apply": false,
       "logger_level": "DEBUG",
-      "nginx-replicas": 2,
+      "nginx-replicas": 4,
       "nginx-node-affinity": {
-         "key": "kubernetes.io/hostname",
-         "values": ["robin-cosched-openwhisk-head"]
+         "key": "node-role.cosched.io/nginx-worker",
+         "values": ["true"]
       },
       "worker-node-affinity": {
-         "key": "kubernetes.io/hostname",
-         "values": [
-            "robin-cosched-general-worker-001", 
-            "robin-cosched-general-worker-002"
-         ]
+         "key": "node-role.cosched.io/general-worker",
+         "values": ["true"]
       }
    },
    "InternalServiceFilePath": "CustomFunctions",

@@ -148,9 +148,7 @@ def start_worker():
         start_request_processing = time.time()
         app.logger.debug('Request Received via REST')
         query_string = request.query_string.decode()
-        app.logger.debug(f'query_string after decoding: {query_string}')
         behaviour_id = request.args.get('bid', default = 'default', type = str)
-        app.logger.debug(f'behaviour_id: {behaviour_id}')
         
         # default behaviour
         my_work_model = globalDict['work_model'][ID]
@@ -250,7 +248,7 @@ def start_worker():
         if request.method == 'POST':
             trace = request.json
             if is_ms_trace(trace):
-                app.logger.debug(f'trace: {trace}')
+                app.logger.debug(f'input: {trace}')
             else:
                 # sanity_check
                 assert len(trace.keys())==1, 'bad trace format'
