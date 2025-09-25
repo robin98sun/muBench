@@ -61,22 +61,16 @@ def cpu_payload_according_to_profiling(profiling_result, latency_ms):
     return duration, duration_select_input_values
 
 def cpu_profiler(params):
-    logger = None
     host_files = dict()
     if "_host_files_" in params:
         host_files = params["_host_files_"]
-    if "_logger_" in params:
-        logger = params["_logger_"]
     latency = 0
     if "latency" in params:
         latency = params["latency"]
-    if logger:
-        del params["_logger_"]
     
     profiling_result = host_files["cpu-profiling-result"]
     duration, duration_select_input_values = cpu_payload_according_to_profiling(profiling_result, latency)
     
     output = f"latency={latency}|duration={duration}|duration_select_input_values={duration_select_input_values}"
-    if logger:
-        logger(f"CPU profiler finished with output: {output}")
+
     return output
