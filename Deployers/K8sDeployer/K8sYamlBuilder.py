@@ -42,7 +42,7 @@ def customization_work_model(workmodel, k8s_parameters):
 def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_path):
     namespace = k8s_parameters['namespace']
     counter=0
-    logger_level = "ERROR"
+    logger_level = None
     if "logger_level" in k8s_parameters.keys():
         logger_level = k8s_parameters['logger_level']
     
@@ -89,10 +89,13 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 f = f.replace("{{TN}}", f'\'{workmodel[service]["threads"]}\'')
             else:
                 f = f.replace("{{TN}}", "\'4\'")
-            if "logger_level" in workmodel[service].keys():
+            
+            if logger_level is not None: 
+                f = f.replace("{{LOGGER_LEVEL}}", f'\'{logger_level}\'')
+            elif "logger_level" in workmodel[service].keys():
                 f = f.replace("{{LOGGER_LEVEL}}", f'\'{workmodel[service]["logger_level"]}\'')
             else:
-                f = f.replace("{{LOGGER_LEVEL}}", f'\'{logger_level}\'')
+                f = f.replace("{{LOGGER_LEVEL}}", "\'ERROR\'")
             
             rank_string='' # ranck string is used to order the yaml file as a funciont of the cpu-requests 
             if  len(set(workmodel[service].keys()).intersection({"cpu-limits","memory-limits","cpu-requests","memory-requests"})):

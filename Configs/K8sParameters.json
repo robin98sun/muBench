@@ -11,7 +11,8 @@
       "nginx-gw": true,
       "nginx-svc-type": "NodePort",
       "nginx-image": "nginx",
-      "no-apply": false
+      "no-apply": false,
+      "logger_level": "DEBUG"
    },
    "InternalServiceFilePath": "CustomFunctions",
    "OutputPath": "SimulationWorkspace",

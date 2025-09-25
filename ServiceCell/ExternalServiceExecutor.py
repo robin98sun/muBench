@@ -162,6 +162,8 @@ def request_external_service_ms_trace(service_series, id, work_model, s, trace, 
         try:
             r = request_function(service_name,id,work_model,s,trace,query_string, app, trace_context, ms_trace_input=service_input)
             app.logger.info("Service: %s -> Status_code: %s -- len(text): %d" % (service, r.status_code, len(r.text)))
+            if len(r.text) < 100:
+                app.logger.info("Service: %s -> Status_code: %s -- text: %s" % (service, r.status_code, r.text))
             if type(r.status_code) == bool and not r.status_code:
                 raise Exception(f"Error in external service: {service} -- (gRPC) status_code: {r.status_code}")
             elif type(r.status_code) == int and r.status_code != 200:
