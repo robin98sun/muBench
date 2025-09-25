@@ -135,6 +135,7 @@ def start_worker():
         query_string = request.query_string.decode()
         app.logger.debug(f'query_string after decoding: {query_string}')
         behaviour_id = request.args.get('bid', default = 'default', type = str)
+        app.logger.debug(f'behaviour_id: {behaviour_id}')
         
         # default behaviour
         my_work_model = globalDict['work_model'][ID]
