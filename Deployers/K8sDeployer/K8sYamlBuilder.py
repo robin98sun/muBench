@@ -190,7 +190,7 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 NGINX_NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
                 NGINX_NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0].update({"key" : k8s_parameters["nginx-node-affinity"]["key"]})
                 NGINX_NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0].update({"values" : k8s_parameters["nginx-node-affinity"]["values"]})
-                f = f.replace("{{NODE_AFFINITY}}", str(yaml.dump(NGINX_NODE_AFFINITY_TEMPLATE_TO_ADD)).rstrip().replace('\n','\n   '))
+                f = f.replace("{{NODE_AFFINITY}}", str(yaml.dump(NGINX_NODE_AFFINITY_TEMPLATE_TO_ADD)).rstrip().replace('\n','\n      '))
             else:
                 f = f.replace("{{NODE_AFFINITY}}", "")
             
