@@ -192,7 +192,7 @@ def start_worker():
         # Execute the internal service
         app.logger.info("*************** INTERNAL SERVICE STARTED ***************")
         start_local_processing = time.time()
-        body = run_internal_service(my_internal_service, logger=app.logger)
+        body = run_internal_service(my_internal_service, logger=app.logger.debug)
         
         local_processing_latency = time.time() - start_local_processing
         INTERNAL_PROCESSING.labels(ZONE, K8S_APP, request.method, request.path).observe(local_processing_latency*1000)

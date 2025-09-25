@@ -1,7 +1,7 @@
 import time
 def cpu_profiler(i, logger = None):
     if logger:
-        logger.debug(f"CPU profiler started with input: {i}")
+        logger(f"CPU profiler started with input: {i}")
     start_time = time.time()
     cpu_load = i
     pi_greco = list()
@@ -22,5 +22,5 @@ def cpu_profiler(i, logger = None):
     end_time = time.time()
     output = f"{i}:{(end_time - start_time)*1000}"
     if logger:
-        logger.debug(f"CPU profiler finished with output: {output}")
+        logger(f"CPU profiler finished with output: {output}")
     return output

@@ -24,7 +24,7 @@ class InternalServiceExecutor(threading.Thread):
     
     def log(self, message):
         if self.logger:
-            self.logger.debug(message)
+            self.logger(message)
 
     def run(self):
         self.log(f"Internal service function: {self.internal_service_function}")
