@@ -101,7 +101,7 @@ def read_config_files():
     return res
 globalDict['work_model'] = read_config_files()    # must be shared among processes for hot update
 
-app.logger.debug(f'globalDict["work_model"][ID]["host_files"]: {globalDict["work_model"][ID]["host_files"]}')
+app.logger.debug(f'len(globalDict["work_model"][ID]["host_files"]): {len(globalDict["work_model"][ID]["host_files"])}')
 
 if "request_method" in globalDict['work_model'][ID].keys():
     request_method = globalDict['work_model'][ID]["request_method"].lower()
