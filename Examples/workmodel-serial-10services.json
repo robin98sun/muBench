@@ -44,7 +44,7 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   },
   "s1": {
     "external_services": [
@@ -91,7 +91,7 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   },
   "s2": {
     "external_services": [
@@ -138,7 +138,7 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   },
   "s3": {
     "external_services": [
@@ -185,7 +185,7 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   },
   "s4": {
     "external_services": [
@@ -232,7 +232,7 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   },
   "s5": {
     "external_services": [
@@ -279,7 +279,7 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   },
   "s6": {
     "external_services": [
@@ -326,7 +326,7 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   },
   "s7": {
     "external_services": [
@@ -373,7 +373,7 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   },
   "s8": {
     "external_services": [
@@ -420,7 +420,7 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   },
   "s9": {
     "external_services": [
@@ -467,6 +467,6 @@
     "path": "/api/v1",
     "image": "msvcbench/microservice_v6-screen:1.0",
     "namespace": "default",
-    "logger_level": "INFO"
+    "logger_level": "DEBUG"
   }
 }

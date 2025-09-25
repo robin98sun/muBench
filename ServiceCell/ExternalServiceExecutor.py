@@ -34,12 +34,12 @@ def init_gRPC(my_service_graph, workmodel, server_port, app):
 
 def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context):
     try:
-        app.logger.info(f'Requesting external service via REST: {service}')
-        app.logger.info(f'jaeger_context: {jaeger_context}')
-        app.logger.info(f'work_model: {work_model}')
+        app.logger.debug(f'Requesting external service via REST: {service}')
+        app.logger.debug(f'jaeger_context: {jaeger_context}')
+        app.logger.debug(f'work_model: {work_model}')
 
-        app.logger.info(f'trace: {trace}')
-        app.logger.info(f'query_string: {query_string}')
+        app.logger.debug(f'trace: {trace}')
+        app.logger.debug(f'query_string: {query_string}')
         service_no_escape = service.split("__")[0]
         
         if len(trace)==0 and len(query_string)==0:
@@ -71,7 +71,11 @@ def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context
 
 def request_gRPC(service,id,work_model,s,trace,query_string,app, trace_context=None):
     message = pb2.Message(message=f"Hello service: {service}")
-    app.logger.info(f'Requesting external service via gRPC: {service}')
+    app.logger.debug(f'Requesting external service via gRPC: {service}')
+    app.logger.debug(f'trace_context: {trace_context}')
+    app.logger.debug(f'work_model: {work_model}')
+    app.logger.debug(f'trace: {trace}')
+    app.logger.debug(f'query_string: {query_string}')
     response = service_stub[service].GetMicroServiceResponse(message)
     return response
 

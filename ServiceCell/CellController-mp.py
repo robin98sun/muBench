@@ -87,12 +87,12 @@ elif logger_level == "ERROR":
 elif logger_level == "CRITICAL":
     app.logger.setLevel(logging.CRITICAL)
 
-app.logger.info(f'ID: {ID}')
-app.logger.info(f'ZONE: {ZONE}')
-app.logger.info(f'K8S_APP: {K8S_APP}')
-app.logger.info(f'PN: {PN}')
-app.logger.info(f'TN: {TN}')
-app.logger.info(f'request_method: {request_method}')
+app.logger.debug(f'ID: {ID}')
+app.logger.debug(f'ZONE: {ZONE}')
+app.logger.debug(f'K8S_APP: {K8S_APP}')
+app.logger.debug(f'PN: {PN}')
+app.logger.debug(f'TN: {TN}')
+app.logger.debug(f'request_method: {request_method}')
 
 ########################### PROMETHEUS METRICS
 registry = CollectorRegistry()
@@ -131,10 +131,9 @@ def start_worker():
     
     try:
         start_request_processing = time.time()
-        app.logger.info('Request Received via REST')
-        app.logger.info(f'query_string: {request.query_string}')
+        app.logger.debug('Request Received via REST')
         query_string = request.query_string.decode()
-        app.logger.info(f'query_string after decoding: {query_string}')
+        app.logger.debug(f'query_string after decoding: {query_string}')
         behaviour_id = request.args.get('bid', default = 'default', type = str)
         
         # default behaviour
