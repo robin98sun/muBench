@@ -192,15 +192,9 @@ def start_worker():
         # Execute the internal service
         app.logger.info("*************** INTERNAL SERVICE STARTED ***************")
         start_local_processing = time.time()
-        body = None
-        try:
-            body = run_internal_service(my_internal_service, app.logger)
-            app.logger.debug(f"Body: {body}")
-            local_processing_latency = time.time() - start_local_processing
-        except Exception as err:
-            local_processing_latency = time.time() - start_local_processing
-            app.logger.error(f"Error in run_internal_service: {err}, processing latency (ms): {local_processing_latency*1000}")
-
+        body = run_internal_service(my_internal_service, logger=app.logger)
+        
+        local_processing_latency = time.time() - start_local_processing
         INTERNAL_PROCESSING.labels(ZONE, K8S_APP, request.method, request.path).observe(local_processing_latency*1000)
         INTERNAL_PROCESSING_BUCKET.labels(ZONE, K8S_APP, request.method, request.path).observe(local_processing_latency*1000)
         RESPONSE_SIZE.labels(ZONE, K8S_APP, request.method, request.path, request.remote_addr, ID).observe(len(body))
