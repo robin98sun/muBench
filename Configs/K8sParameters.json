@@ -10,6 +10,7 @@
       "sleep": 0,
       "nginx-gw": true,
       "nginx-svc-type": "NodePort",
+      "nginx-image": "nginx",
       "no-apply": false
    },
    "InternalServiceFilePath": "CustomFunctions",

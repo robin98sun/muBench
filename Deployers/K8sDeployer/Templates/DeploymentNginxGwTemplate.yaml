@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: gw-nginx
-        image: nginx
+        image: {{NGINX_IMAGE}}
         ports:
         - name: http-nginx
           containerPort: 80

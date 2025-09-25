@@ -137,6 +137,7 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             f = file.read()
             f = f.replace("{{NAMESPACE}}", namespace)
             f = f.replace("{{SVCTYPE}}", k8s_parameters["nginx-svc-type"])
+            f = f.replace("{{NGINX_IMAGE}}", k8s_parameters["nginx-image"])
             if "scheduler-name" in workmodel[service].keys():
                 f = f.replace("{{SCHEDULER_NAME}}", str(workmodel[service]["scheduler-name"]))
             else:
