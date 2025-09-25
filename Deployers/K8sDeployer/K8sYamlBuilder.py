@@ -114,8 +114,8 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 host_files_mount_paths = []
                 host_files_volumes = []
                 for host_file in workmodel[service]["host_files"]:
-                    host_files_mount_paths.append(f"- name: {host_file['name']}\n            mountPath: /app/{host_file['name']}\n            readOnly: true")
-                    host_files_volumes.append(f"- name: {host_file['name']}\n            hostPath: {host_file['path']}\n            type: File")
+                    host_files_mount_paths.append({"name": host_file['name'], "mountPath": f"/app/{host_file['name']}", "readOnly": True})
+                    host_files_volumes.append({"name": host_file['name'], "hostPath": host_file['path'], "type": "File"})
                 f = f.replace("{{HOST_FILES_MOUNT_PATHS}}", str(yaml.dump(host_files_mount_paths)).rstrip().replace('\n','\n        '))
                 f = f.replace("{{HOST_FILES_VOLUMES}}", str(yaml.dump(host_files_volumes)).rstrip().replace('\n','\n        '))
             else:
