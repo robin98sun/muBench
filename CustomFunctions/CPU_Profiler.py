@@ -72,7 +72,6 @@ def cpu_profiler(params):
         latency = params["latency"]
     if logger:
         del params["_logger_"]
-        logger(f"CPU profiler started with params: {params}")
     
     profiling_result = host_files["cpu-profiling-result"]
     duration, duration_select_input_values = cpu_payload_according_to_profiling(profiling_result, latency)
