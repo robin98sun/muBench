@@ -22,7 +22,14 @@
          "key": "node-role.cosched.io/general-worker",
          "values": ["true"]
       },
-      "ms-replica": 1
+      "ms-replica": 1,
+      "host_files": [
+        {
+            "name": "cpu-profiling-result", 
+            "mount_path": "/app/cpu_profiling_result.json",
+            "host_path": "/mnt/shared-storage/profiling/results/cpu_profiling_result.json"
+        }
+      ]
    },
    "InternalServiceFilePath": "CustomFunctions",
    "OutputPath": "SimulationWorkspace",
