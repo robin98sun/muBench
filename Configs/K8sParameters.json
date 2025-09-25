@@ -12,7 +12,7 @@
       "nginx-svc-type": "NodePort",
       "nginx-image": "nginx",
       "no-apply": false,
-      "logger_level": "DEBUG",
+      "logger_level": "INFO",
       "nginx-replicas": 4,
       "nginx-node-affinity": {
          "key": "node-role.cosched.io/nginx-worker",
