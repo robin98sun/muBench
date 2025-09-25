@@ -12,7 +12,19 @@
       "nginx-svc-type": "NodePort",
       "nginx-image": "nginx",
       "no-apply": false,
-      "logger_level": "DEBUG"
+      "logger_level": "DEBUG",
+      "nginx-replicas": 2,
+      "nginx-node-affinity": {
+         "key": "kubernetes.io/hostname",
+         "values": ["robin-cosched-openwhisk-head"]
+      },
+      "worker-node-affinity": {
+         "key": "kubernetes.io/hostname",
+         "values": [
+            "robin-cosched-openwhisk-worker-01", 
+            "robin-cosched-openwhisk-worker-02"
+         ]
+      }
    },
    "InternalServiceFilePath": "CustomFunctions",
    "OutputPath": "SimulationWorkspace",

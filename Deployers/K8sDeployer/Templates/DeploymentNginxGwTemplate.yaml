@@ -7,10 +7,11 @@ metadata:
     app: gw-nginx
     version: "1.0"
 spec:
-  replicas: 1
+  replicas: {{NGINX_REPLICAS}}
   selector:
     matchLabels:
         app: gw-nginx
+  {{NODE_AFFINITY}}
   template:
     metadata:
       labels:

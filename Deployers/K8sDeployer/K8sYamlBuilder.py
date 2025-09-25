@@ -10,6 +10,7 @@ SIDECAR_TEMPLATE = "- name: %s-sidecar\n          image: %s"
 NODE_AFFINITY_TEMPLATE = {'affinity': {'nodeAffinity': {'requiredDuringSchedulingIgnoredDuringExecution': {'nodeSelectorTerms': [{'matchExpressions': [{'key': 'kubernetes.io/hostname','operator': 'In','values': ['']}]}]}}}}
 POD_ANTIAFFINITI_TEMPLATE = {'affinity':{'podAntiAffinity':{'requiredDuringSchedulingIgnoredDuringExecution':[{'labelSelector':{'matchExpressions':[{'key':'app','operator':'In','values':['']}]},'topologyKey':'kubernetes.io/hostname'}]}}}
 
+
 # Override work_model params with those in k8s_parameters
 def customization_work_model(workmodel, k8s_parameters):
     for service in workmodel:
@@ -68,14 +69,21 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 f = f.replace("{{REPLICAS}}", str(workmodel[service]["replicas"]))
             else:
                 f = f.replace("{{REPLICAS}}", "1")
-            if "node_affinity" in workmodel[service].keys():
-                NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE
+            
+            if "worker-node-affinity" in k8s_parameters.keys():
+                NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
+                NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0].update({"values" : k8s_parameters["worker-node-affinity"]["values"]})
+                NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0].update({"key" : k8s_parameters["worker-node-affinity"]["key"]})
+                f = f.replace("{{NODE_AFFINITY}}", str(yaml.dump(NODE_AFFINITY_TEMPLATE_TO_ADD)).rstrip().replace('\n','\n   '))
+            elif "node_affinity" in workmodel[service].keys():
+                NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
                 NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0].update({"values" : workmodel[service]["node_affinity"]})
                 f = f.replace("{{NODE_AFFINITY}}", str(yaml.dump(NODE_AFFINITY_TEMPLATE_TO_ADD)).rstrip().replace('\n','\n   '))
             else:
                 f = f.replace("{{NODE_AFFINITY}}", "")
+                
             if "pod_antiaffinity" in workmodel[service].keys() and workmodel[service]['pod_antiaffinity']==True:
-                POD_ANTIAFFINITY_TO_ADD = POD_ANTIAFFINITI_TEMPLATE
+                POD_ANTIAFFINITY_TO_ADD = POD_ANTIAFFINITI_TEMPLATE.copy()
                 POD_ANTIAFFINITY_TO_ADD['affinity']['podAntiAffinity']['requiredDuringSchedulingIgnoredDuringExecution'][0]['labelSelector']['matchExpressions'][0]['values'][0] = service
                 POD_ANTIAFFINITY_TO_ADD = str(yaml.dump(POD_ANTIAFFINITY_TO_ADD)).replace('\n','\n        ').rstrip()
                 f = f.replace("{{POD_ANTIAFFINITY}}", POD_ANTIAFFINITY_TO_ADD)
@@ -167,10 +175,24 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             f = f.replace("{{NAMESPACE}}", namespace)
             f = f.replace("{{SVCTYPE}}", k8s_parameters["nginx-svc-type"])
             f = f.replace("{{NGINX_IMAGE}}", k8s_parameters["nginx-image"])
+
+            if "nginx-replicas" in k8s_parameters.keys():
+                f = f.replace("{{NGINX_REPLICAS}}", str(k8s_parameters["nginx-replicas"]))
+            else:
+                f = f.replace("{{NGINX_REPLICAS}}", "1")
+
             if "scheduler-name" in workmodel[service].keys():
                 f = f.replace("{{SCHEDULER_NAME}}", str(workmodel[service]["scheduler-name"]))
             else:
                 f = f.replace("{{SCHEDULER_NAME}}", "default-scheduler")
+
+            if "nginx-node-affinity" in k8s_parameters.keys():
+                NGINX_NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
+                NGINX_NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0].update({"key" : k8s_parameters["nginx-node-affinity"]["key"]})
+                NGINX_NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0].update({"values" : k8s_parameters["nginx-node-affinity"]["values"]})
+                f = f.replace("{{NODE_AFFINITY}}", str(yaml.dump(NGINX_NODE_AFFINITY_TEMPLATE_TO_ADD)).rstrip().replace('\n','\n   '))
+            else:
+                f = f.replace("{{NODE_AFFINITY}}", "")
             
         with open(f"{output_path}/yamls/{k8s_parameters['prefix_yaml_file']}-DeploymentNginxGw.yaml", "w") as file:
             file.write(f)
