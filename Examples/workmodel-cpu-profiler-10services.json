@@ -7,6 +7,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     },
     "s1": {
@@ -17,6 +23,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     },
     "s2": {
@@ -27,6 +39,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     },
     "s3": {
@@ -37,6 +55,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     },
     "s4": {
@@ -47,6 +71,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     },
     "s5": {
@@ -57,6 +87,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     },
     "s6": {
@@ -67,6 +103,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     },
     "s7": {
@@ -77,6 +119,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     },
     "s8": {
@@ -87,6 +135,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     },
     "s9": {
@@ -97,6 +151,12 @@
       "path": "/api/v1",
       "image": "msvcbench/microservice_v6-screen:1.0",
       "namespace": "default",
+      "host_files": [
+        {
+            "name": "cpu_profiling_result",
+            "path": "/mnt/shared-storage/profiling/cpu_profiling_result.json"
+        }
+      ],
       "logger_level": "DEBUG"
     }
   }

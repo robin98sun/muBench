@@ -46,6 +46,7 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
         counter=counter+1
 
         # Create Deployment yamls
+
         with open(f"{K8s_YAML_BUILDER_PATH}/Templates/DeploymentTemplate.yaml", "r") as file:
             f = file.read()
             f = f.replace("{{SERVICE_NAME}}", service)
@@ -107,6 +108,20 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 f = f.replace("{{RESOURCES}}", s)
             else:
                 f= f.replace("{{RESOURCES}}", "{}")
+
+            # add host files mount paths and volumes
+            if "host_files" in workmodel[service].keys():
+                host_files_mount_paths = []
+                host_files_volumes = []
+                for host_file in workmodel[service]["host_files"]:
+                    host_files_mount_paths.append(f"- name: {host_file['name']}\n            mountPath: /app/{host_file['name']}\n            readOnly: true")
+                    host_files_volumes.append(f"- name: {host_file['name']}\n            hostPath: {host_file['path']}\n            type: File")
+                f = f.replace("{{HOST_FILES_MOUNT_PATHS}}", str(yaml.dump(host_files_mount_paths)).rstrip().replace('\n','\n        '))
+                f = f.replace("{{HOST_FILES_VOLUMES}}", str(yaml.dump(host_files_volumes)).rstrip().replace('\n','\n        '))
+            else:
+                f = f.replace("{{HOST_FILES_MOUNT_PATHS}}", "")
+                f = f.replace("{{HOST_FILES_VOLUMES}}", "")
+
         if not os.path.exists(f"{output_path}/yamls"):
             os.makedirs(f"{output_path}/yamls")
         

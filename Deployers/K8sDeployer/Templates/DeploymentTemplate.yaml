@@ -41,6 +41,7 @@ spec:
               mountPath: /app/MSConfig
             - name: microservice-internal-services
               mountPath: /app/MSConfig/InternalServiceFunctions
+            {{HOST_FILES_MOUNT_PATHS}}
           env:
             - name: APP
               value: {{SERVICE_NAME}}
@@ -83,3 +84,4 @@ spec:
         - name: microservice-internal-services
           configMap:
             name: internal-services
+        {{HOST_FILES_VOLUMES}}
