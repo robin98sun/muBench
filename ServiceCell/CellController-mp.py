@@ -159,11 +159,12 @@ def start_worker():
         trace=dict()
         if request.method == 'POST':
             trace = request.json
+            app.logger.debug(f'trace: {trace}')
             # sanity_check
             assert len(trace.keys())==1, 'bad trace format'
             assert ID == list(trace)[0].split(traceEscapeString)[0], "bad trace format, ID"
             trace[ID] = trace[list(trace)[0]] # We insert 1 more key "s0": [value] 
-            
+            app.logger.debug(f'trace after insertion: {trace}')
         if len(trace)>0:
         # trace-driven request
             n_groups = len(trace[ID])
