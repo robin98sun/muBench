@@ -90,9 +90,6 @@ def run_internal_service(internal_service_params, logger = None, host_files = di
     if internal_service_function == None:
         set_internal_service_function(internal_service_params)
 
-    if logger:
-        logger(f"Internal service params: {internal_service_params}")
-        logger(f"Internal service params_v: {internal_service_params_v}")
     #function_name = list(internal_service_params)[0]
     #internal_service_params_v = list(internal_service_params.values())[0]
     # response = list()
@@ -110,9 +107,6 @@ def run_internal_service_ms_trace(internal_service_params, logger = None, host_f
         internal_service_params_v = internal_service_params["params"]
         internal_service_function = eval(function_name)
 
-    if logger:
-        logger(f"Internal service params: {internal_service_params}")
-        logger(f"Internal service params_v: {internal_service_params_v}")
     response = ThreadReturnedValue()
     thread = InternalServiceExecutor(internal_service_function, internal_service_params_v, response, logger, host_files)
     thread.start()
