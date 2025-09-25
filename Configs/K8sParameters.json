@@ -21,8 +21,8 @@
       "worker-node-affinity": {
          "key": "kubernetes.io/hostname",
          "values": [
-            "robin-cosched-openwhisk-worker-01", 
-            "robin-cosched-openwhisk-worker-02"
+            "robin-cosched-general-worker-001", 
+            "robin-cosched-general-worker-002"
          ]
       }
    },
