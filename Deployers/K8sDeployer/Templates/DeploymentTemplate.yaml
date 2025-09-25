@@ -14,7 +14,6 @@ spec:
     matchLabels:
       app: {{SERVICE_NAME}}
   replicas: {{REPLICAS}}
-  {{NODE_AFFINITY}}
   template:
     metadata:
       labels:
@@ -28,6 +27,7 @@ spec:
     spec:
       terminationGracePeriodSeconds : 3
       schedulerName: {{SCHEDULER_NAME}}
+      {{NODE_AFFINITY}}
       containers:
         - name: {{SERVICE_NAME}}
           image: {{IMAGE}}
