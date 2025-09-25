@@ -1,0 +1,202 @@
+{
+    "s0": {
+      "external_services": [
+        {
+          "seq_len": 100,
+          "services": ["s1","s2","s3","s4","s5","s6","s7","s8","s9"
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s0.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    },
+    "s1": {
+      "external_services": [
+        {
+          "seq_len": 1,
+          "services": [
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s1.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    },
+    "s2": {
+      "external_services": [
+        {
+          "seq_len": 1,
+          "services": [
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s2.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    },
+    "s3": {
+      "external_services": [
+        {
+          "seq_len": 1,
+          "services": [
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s3.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    },
+    "s4": {
+      "external_services": [
+        {
+          "seq_len": 1,
+          "services": [
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s4.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    },
+    "s5": {
+      "external_services": [
+        {
+          "seq_len": 1,
+          "services": [
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s1.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    },
+    "s6": {
+      "external_services": [
+        {
+          "seq_len": 1,
+          "services": [
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s1.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    },
+    "s7": {
+      "external_services": [
+        {
+          "seq_len": 1,
+          "services": [
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s2.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    },
+    "s8": {
+      "external_services": [
+        {
+          "seq_len": 1,
+          "services": [
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s3.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    },
+    "s9": {
+      "external_services": [
+        {
+          "seq_len": 1,
+          "services": [
+          ]
+        }
+      ],
+      "internal_service": {
+        "cpu_profiler": {}
+      },
+      "request_method": "rest",
+      "workers": 4,
+      "threads": 16,
+      "url": "s4.default.svc.cluster.local",
+      "path": "/api/v1",
+      "image": "msvcbench/microservice_v6-screen:1.0",
+      "namespace": "default",
+      "logger_level": "DEBUG"
+    }
+  }

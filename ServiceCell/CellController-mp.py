@@ -160,13 +160,20 @@ def start_worker():
         if request.method == 'POST':
             trace = request.json
             app.logger.debug(f'trace: {trace}')
-            # sanity_check
-            assert len(trace.keys())==1, 'bad trace format'
-            assert ID == list(trace)[0].split(traceEscapeString)[0], "bad trace format, ID"
-            trace[ID] = trace[list(trace)[0]] # We insert 1 more key "s0": [value] 
-            app.logger.debug(f'trace after insertion: {trace}')
-        if len(trace)>0:
-        # trace-driven request
+            if "trace-type" in trace and trace["trace-type"] == "ms-trace":
+                pass
+            else:
+                # sanity_check
+                assert len(trace.keys())==1, 'bad trace format'
+                assert ID == list(trace)[0].split(traceEscapeString)[0], "bad trace format, ID"
+                trace[ID] = trace[list(trace)[0]] # We insert 1 more key "s0": [value] 
+                app.logger.debug(f'trace after insertion: {trace}')
+
+        if "trace-type" in trace and trace["trace-type"] == "ms-trace":
+            my_internal_service = my_internal_service.copy()
+            my_internal_service["ms-trace-input"] = trace
+        elif len(trace)>0:
+        # (mubench trace)-driven request
             n_groups = len(trace[ID])
             my_service_graph = list()
             for i in range(0,n_groups):
