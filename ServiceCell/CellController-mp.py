@@ -74,7 +74,7 @@ else:
 
 logger_level = "ERROR"
 if "logger_level" in globalDict['work_model'][ID].keys():   
-    logger_level = globalDict['work_model'][ID]["logger_level"]
+    logger_level = globalDict['work_model'][ID]["logger_level"].upper()
 
 if logger_level == "INFO":
     app.logger.setLevel(logging.INFO)
