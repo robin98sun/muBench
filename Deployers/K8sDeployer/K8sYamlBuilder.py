@@ -214,7 +214,7 @@ def populate_services_with_global_params(workmodel, k8s_parameters):
     for service in workmodel:
         for param in interested_params:
             if param in k8s_parameters.keys():
-                workmodel[service].update({param: k8s_parameters[param]})
+                workmodel[service][param] = k8s_parameters[param]
     return workmodel
 
 def create_workmodel_configmap_yaml_file(workmodel, k8s_parameters, nfs, output_path):
