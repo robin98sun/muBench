@@ -114,7 +114,7 @@ def run_internal_service_ms_trace(internal_service_params, logger = None, host_f
     internal_service_function_body = internal_service_function_dict[function_name]
 
     response = ThreadReturnedValue()
-    thread = InternalServiceExecutor(internal_service_function_body, internal_service_params["params"].copy(), response, logger, host_files)
+    thread = InternalServiceExecutor(internal_service_function_body, internal_service_params["params"], response, logger, host_files)
     thread.start()
     thread.join()
     return response.get_body()
