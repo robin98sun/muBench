@@ -209,12 +209,20 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             file.write(f)
     print("Deployments and Services Created!")
 
+def populate_services_with_global_params(workmodel, k8s_parameters):
+    interested_params = ["host-files"]
+    for service in workmodel:
+        for param in interested_params:
+            if param in k8s_parameters.keys():
+                workmodel[service].update({param: k8s_parameters[param]})
+    return workmodel
+
 def create_workmodel_configmap_yaml_file(workmodel, k8s_parameters, nfs, output_path):
     namespace = k8s_parameters['namespace']
     with open(f"{K8s_YAML_BUILDER_PATH}/Templates/ConfigMapWorkmodelTemplate.yaml", "r") as file:
         f = file.read()
         f = f.replace("{{NAMESPACE}}", namespace)
-        j = json.dumps(workmodel,indent=2)
+        j = json.dumps(populate_services_with_global_params(workmodel, k8s_parameters),indent=2)
         j = '    '.join(j.splitlines(True))
         f = f.replace("{{WORKMODEL}}", j)
     with open(f"{output_path}/yamls/{k8s_parameters['prefix_yaml_file']}-ConfigMapWorkmodel.yaml", "w") as file:
