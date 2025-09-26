@@ -49,7 +49,10 @@ def deploy_items(folder,st):
                 except ApiException as err:
                     api_exception_body = json.loads(err.body)
                     print("######################")
-                    print(f"Exception raised deploying a {partial_yaml['kind']}: {api_exception_body['details']} -> {api_exception_body['reason']}")
+                    if "details" in api_exception_body.keys() and "reason" in api_exception_body.keys():
+                        print(f"Exception raised deploying a {partial_yaml['kind']}: {api_exception_body['details']} -> {api_exception_body['reason']}")
+                    else:
+                        print(f"Exception raised deploying a {partial_yaml['kind']}: {api_exception_body}")
                     print("######################")                
 
 def undeploy_items(folder):
