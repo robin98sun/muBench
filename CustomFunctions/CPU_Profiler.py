@@ -20,12 +20,14 @@ def cpu_loader_job(i):
 def select_input_values_according_to_profiling(profiling_result, latency_ms):
     # if the profiling result is sampled, return the sampled result
     if 'sampled_latencies_ms' in profiling_result and 'sampled_latencies_count' in profiling_result and profiling_result['sampled_latencies_count'] > 0:
-        if latency_ms <= profiling_result['sampled_latencies_count']:
-            return profiling_result['sampled_latencies_ms'][latency_ms-1]
+        latency_int = int(round(latency_ms))
+        if latency_int <= profiling_result['sampled_latencies_count']:
+
+            return profiling_result['sampled_latencies_ms'][latency_int-1]
 
     # select the input values according to the profiling result
     statistics = profiling_result['statistics']
-    remaining_latency = latency_ms
+    remaining_latency = latency_int
     selected_input_values = []
     last_selected_index = len(statistics)-1
     while remaining_latency > 0 and last_selected_index >= 0:
