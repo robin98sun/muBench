@@ -56,6 +56,8 @@ k8s_Builder_PATH = os.path.dirname(os.path.abspath(__file__))
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--config-file', action='store', dest='parameters_file',
                     help='The K8s Parameters file', default=f'{k8s_Builder_PATH}/K8sParameters.json')
+parser.add_argument('-r', '--remove-microservices', action='store', dest='remove_microservices',
+                    help='Remove microservices', default=False)
 
 argcomplete.autocomplete(parser)
 
@@ -71,7 +73,7 @@ except Exception as err:
 
 #### input params
 parameters_file_path = args.parameters_file
-
+remove_microservices = args.remove_microservices
 try:
     with open(parameters_file_path) as f:
         params = json.load(f)
@@ -118,11 +120,13 @@ if not folder_not_exist and len(os.listdir(folder)) > 0:
         K8sYamlDeployer.undeploy_items(folder)
     remove_files(folder)
 
-print("--------------------------------")
-print("creating new application")
-# Create YAML files
-updated_folder_items, work_model = create_deployment_config()   
-# Deploy YAML files
-if not no_apply:
-    K8sYamlDeployer.deploy_items(folder, st=k8s_parameters['sleep'])
+if not remove_microservices:
+    print("--------------------------------")
+    print("creating new application")
+    # Create YAML files
+    updated_folder_items, work_model = create_deployment_config()   
+    # Deploy YAML files
+    if not no_apply:
+        K8sYamlDeployer.deploy_items(folder, st=k8s_parameters['sleep'])
+
 
