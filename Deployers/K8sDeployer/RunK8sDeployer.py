@@ -56,7 +56,7 @@ k8s_Builder_PATH = os.path.dirname(os.path.abspath(__file__))
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--config-file', action='store', dest='parameters_file',
                     help='The K8s Parameters file', default=f'{k8s_Builder_PATH}/K8sParameters.json')
-parser.add_argument('-r', '--remove-microservices', action='store', dest='remove_microservices',
+parser.add_argument('-r', '--remove-microservices', action='store_true', dest='remove_microservices',
                     help='Remove microservices', default=False)
 
 argcomplete.autocomplete(parser)
@@ -74,6 +74,7 @@ except Exception as err:
 #### input params
 parameters_file_path = args.parameters_file
 remove_microservices = args.remove_microservices
+
 try:
     with open(parameters_file_path) as f:
         params = json.load(f)
