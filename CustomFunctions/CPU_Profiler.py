@@ -73,6 +73,6 @@ def cpu_profiler(params):
     profiling_result = host_files["cpu-profiling-result"]
     duration, duration_select_input_values = cpu_payload_according_to_profiling(profiling_result, latency)
     
-    output = f"latency={latency}|duration={duration}|duration_select_input_values={duration_select_input_values}"
+    output = f"{latency}|{duration}|{duration_select_input_values}"
 
     return output

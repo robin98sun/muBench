@@ -150,8 +150,9 @@ def run_external_service(services_group, work_model, query_string, trace, app, t
 # for MS TRACE, the service_series is a list of services to be called in sequence
 def request_external_service_ms_trace(service_series, id, work_model, s, trace, query_string, app, trace_context):
     app.logger.info("**** Start SERVICES in thread: %s (via MS TRACE)" % str([service["name"] for service in service_series]))
-
+    start_time = time.time()
     service_error_dict = dict()
+    service_response_dict = dict()
     service_error_flag = False
     for service in service_series:
         if "name" not in service or "input" not in service:
@@ -161,19 +162,22 @@ def request_external_service_ms_trace(service_series, id, work_model, s, trace, 
         service_input["trace_type"] = "ms-trace"
         try:
             r = request_function(service_name,id,work_model,s,trace,query_string, app, trace_context, ms_trace_input=service_input)
-            app.logger.info("Service: %s -> Status_code: %s -- len(text): %d" % (service_name, r.status_code, len(r.text)))
             if len(r.text) < 100:
                 app.logger.info("Service: %s -> Status_code: %s -- text: %s" % (service_name, r.status_code, r.text))
+            else:
+                app.logger.info("Service: %s -> Status_code: %s -- len(text): %d" % (service_name, r.status_code, len(r.text)))
             if type(r.status_code) == bool and not r.status_code:
-                raise Exception(f"Error in external service: {service_name} -- (gRPC) status_code: {r.status_code}")
+                raise Exception(f"grpc error: {r.status_code}")
             elif type(r.status_code) == int and r.status_code != 200:
-                raise Exception(f"Error in external service: {service_name} -- (REST) status_code: {r.status_code}")
+                raise Exception(f"rest error: {r.status_code}")
+            else:
+                service_response_dict[service_name] = f"{service_name}::{(time.time()-start_time)*1000}::{r.text}"
         except Exception as err:
             app.logger.error("Error in request external service %s -- %s" % (service_name, str(err)))
             service_error_dict[service_name] = err
             service_error_flag = True
     app.logger.info("#### SERVICE Done!")
-    return service_error_flag, service_error_dict
+    return service_error_flag, service_error_dict, service_response_dict
 
 # external_services is a 2-dimensional list
 # the first dimension is concurrent service series, which are run in parallel
@@ -181,6 +185,7 @@ def request_external_service_ms_trace(service_series, id, work_model, s, trace, 
 def run_external_service_ms_trace(external_services, work_model, query_string, trace, app, trace_context=None):
     app.logger.info("** EXTERNAL SERVICES (via MS TRACE)")
     service_error_dict = dict()
+    service_response_dict = dict()
     number_of_groups = len(external_services)
     pool = ThreadPoolExecutor(number_of_groups)
     futures = list()
@@ -192,6 +197,7 @@ def run_external_service_ms_trace(external_services, work_model, query_string, t
     for x in as_completed(futures):
         if x.result()[0]:
             service_error_dict.update(x.result()[1])
+        service_response_dict.update(x.result()[2])
     app.logger.info("--------> Threads Done!")
-    return service_error_dict
+    return service_error_dict, service_response_dict
 

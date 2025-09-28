@@ -286,8 +286,9 @@ def start_worker():
         if is_ms_trace(trace):
             if my_internal_service is not None and len(my_internal_service)>0:
                 body = run_internal_service_ms_trace(my_internal_service, logger=app.logger.debug, host_files=globalDict['work_model'][ID]["host-files"])
+                body = f"{ID}:{(time.time()-start_request_processing)*1000}:{body}"
             else:
-                body = "no internal service"
+                body = f"{ID}:0:null"
         else:
             body = run_internal_service(my_internal_service, logger=app.logger.debug, host_files=globalDict['work_model'][ID]["host-files"])
         
@@ -303,11 +304,15 @@ def start_worker():
         app.logger.info("*************** EXTERNAL SERVICES STARTED ***************")
         
         service_error_dict = dict()
+        service_response_dict = dict()
         if is_ms_trace(trace):
             if "external_services" in trace.keys() and trace["external_services"] is not None and len(trace["external_services"])>0:
                 my_service_graph = trace["external_services"]
-                service_error_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers)
-
+                service_error_dict, service_response_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers)
+                body = f"{body}||{(time.time()-start_request_processing)*1000}||{'!'.join(list(service_response_dict.values()) + list(service_error_dict.values()))}"
+            else:
+                body = f"{body}||{(time.time()-start_request_processing)*1000}||null"
+                    
         elif len(my_service_graph) > 0:
             if len(trace)>0:
                 service_error_dict = run_external_service(my_service_graph,globalDict['work_model'],query_string,trace[ID],app, jaeger_headers)
@@ -319,6 +324,8 @@ def start_worker():
             app.logger.error("Error in request external services")
             app.logger.error(service_error_dict)
             return make_response(json.dumps({"message": "Error in external services request"}), 500)
+        
+
         app.logger.info("############### EXTERNAL SERVICES FINISHED! ###############")
 
         response = make_response(body)
