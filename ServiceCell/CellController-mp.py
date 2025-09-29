@@ -146,6 +146,13 @@ def start_worker():
     global globalDict
     
     try:
+
+        nginx_forward_time = request.headers.get('X-Nginx-Forward-Time', '')
+
+        request_fowarding_delay_before_processing_query_ms = 0
+        if nginx_forward_time:
+            request_fowarding_delay_before_processing_query_ms = (float(nginx_forward_time) - float(time.time())) * 1000
+
         start_request_processing = time.time()
         app.logger.debug('Request Received via REST')
         query_string = request.query_string.decode()
@@ -286,9 +293,9 @@ def start_worker():
         if is_ms_trace(trace):
             if my_internal_service is not None and len(my_internal_service)>0:
                 body = run_internal_service_ms_trace(my_internal_service, logger=app.logger.debug, host_files=globalDict['work_model'][ID]["host-files"])
-                body = f"{ID}:{(time.time()-start_request_processing)*1000}:{body}"
+                body = f"{ID}:{request_fowarding_delay_before_processing_query_ms}:{(time.time()-start_request_processing)*1000}:{body}"
             else:
-                body = f"{ID}:0:null"
+                body = f"{ID}:{request_fowarding_delay_before_processing_query_ms}:0:null"
         else:
             body = run_internal_service(my_internal_service, logger=app.logger.debug, host_files=globalDict['work_model'][ID]["host-files"])
         
@@ -339,7 +346,7 @@ def start_worker():
         # Add trace context propagation headers to the response
         response.headers.update(jaeger_headers)
 
-        
+
 
         return response
     except Exception as err:
