@@ -339,6 +339,8 @@ def start_worker():
         # Add trace context propagation headers to the response
         response.headers.update(jaeger_headers)
 
+        
+
         return response
     except Exception as err:
         app.logger.error("Error in start_worker", err)

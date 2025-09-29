@@ -42,9 +42,13 @@ data:
                     # Capture forward timestamp just before proxy with microsecond precision  
                     set $nginx_forward_timestamp $msec;
                     
+                    # Capture response sending timestamp with microsecond precision
+                    set $nginx_response_time_start $msec;
+                    
                     # Set timestamp headers for downstream microservices
                     add_header X-Nginx-Accept-Time $nginx_accept_timestamp_captured always;
                     add_header X-Nginx-Forward-Time $nginx_forward_timestamp always;
+                    add_header X-Nginx-Response-Time-Start $nginx_response_time_start always;
                     
                     proxy_read_timeout 5m;
                     proxy_connect_timeout 5m;
@@ -56,6 +60,7 @@ data:
                     # Pass through the timestamp headers to preserve them
                     proxy_pass_header X-Nginx-Accept-Time;
                     proxy_pass_header X-Nginx-Forward-Time;
+                    proxy_pass_header X-Nginx-Response-Time-Start;
                 }
                 location ~* /update$ {
                     # Capture accept timestamp at request start with microsecond precision
@@ -64,9 +69,13 @@ data:
                     # Capture forward timestamp just before proxy with microsecond precision  
                     set $nginx_forward_timestamp $msec;
                     
+                    # Capture response sending timestamp with microsecond precision
+                    set $nginx_response_time_start $msec;
+                    
                     # Set timestamp headers for downstream microservices
                     add_header X-Nginx-Accept-Time $nginx_accept_timestamp_captured always;
                     add_header X-Nginx-Forward-Time $nginx_forward_timestamp always;
+                    add_header X-Nginx-Response-Time-Start $nginx_response_time_start always;
                     
                     resolver {{RESOLVER}};
                     rewrite ^(/.*)/update$ /update break;
@@ -76,6 +85,7 @@ data:
                     # Pass through the timestamp headers to preserve them
                     proxy_pass_header X-Nginx-Accept-Time;
                     proxy_pass_header X-Nginx-Forward-Time;
+                    proxy_pass_header X-Nginx-Response-Time-Start;
                 }
         }
     }
