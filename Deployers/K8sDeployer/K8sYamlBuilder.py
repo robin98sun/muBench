@@ -73,6 +73,11 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             else:
                 f = f.replace("{{REPLICAS}}", "1")
             
+            if "qos-group" in workmodel[service].keys():
+                f = f.replace("{{QOS_GROUP}}", workmodel[service]["qos-group"])
+            else:
+                f = f.replace("{{QOS_GROUP}}", "be")
+            
             if "worker-node-affinity" in k8s_parameters.keys():
                 NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
                 # Ensure values is always a list

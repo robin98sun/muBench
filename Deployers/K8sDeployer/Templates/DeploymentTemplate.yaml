@@ -21,9 +21,11 @@ spec:
         app: {{SERVICE_NAME}}
         version: "1.0"
         prometheus.io/scrape: 'true'
+        qos-group: {{QOS_GROUP}}
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
+        qos-group: {{QOS_GROUP}}
     spec:
       terminationGracePeriodSeconds : 3
       schedulerName: {{SCHEDULER_NAME}}
