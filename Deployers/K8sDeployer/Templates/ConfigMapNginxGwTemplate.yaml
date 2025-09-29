@@ -36,11 +36,14 @@ data:
                 listen       80;
                 server_name  _;
                 location / {
-                    # Set timestamp headers for downstream microservices
-                    add_header X-Nginx-Accept-Time $nginx_accept_timestamp always;
+                    # Capture accept timestamp at request start
+                    set $nginx_accept_timestamp_captured $time_iso8601;
                     
                     # Capture forward timestamp just before proxy
                     set $nginx_forward_timestamp $time_iso8601;
+                    
+                    # Set timestamp headers for downstream microservices
+                    add_header X-Nginx-Accept-Time $nginx_accept_timestamp_captured always;
                     add_header X-Nginx-Forward-Time $nginx_forward_timestamp always;
                     
                     proxy_read_timeout 5m;
@@ -55,11 +58,14 @@ data:
                     proxy_pass_header X-Nginx-Forward-Time;
                 }
                 location ~* /update$ {
-                    # Set timestamp headers for downstream microservices
-                    add_header X-Nginx-Accept-Time $nginx_accept_timestamp always;
+                    # Capture accept timestamp at request start
+                    set $nginx_accept_timestamp_captured $time_iso8601;
                     
                     # Capture forward timestamp just before proxy
                     set $nginx_forward_timestamp $time_iso8601;
+                    
+                    # Set timestamp headers for downstream microservices
+                    add_header X-Nginx-Accept-Time $nginx_accept_timestamp_captured always;
                     add_header X-Nginx-Forward-Time $nginx_forward_timestamp always;
                     
                     resolver {{RESOLVER}};
