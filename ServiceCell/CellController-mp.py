@@ -260,6 +260,10 @@ def start_worker():
         trace=dict()
         if request.method == 'POST':
             trace = request.json
+            if trace is None:
+                app.logger.error(f'request body is none')
+                return make_response(json.dumps({"message": "Request body is none"}), 500)
+
             if is_ms_trace(trace):
                 app.logger.debug(f'ms-trace trace: {trace}')
             else:
