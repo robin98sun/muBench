@@ -79,9 +79,9 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 f = f.replace("{{QOS_GROUP}}", "be")
 
             if "cosched-scheduler-name" in k8s_parameters.keys():
-                f = f.replace("{{COSCHED_SCHEDULER_NAME}}", k8s_parameters["cosched-scheduler-name"])
+                f = f.replace("{{SCHEDULER_IN_COSCHED}}", k8s_parameters["cosched-scheduler-name"])
             else:
-                f = f.replace("{{COSCHED_SCHEDULER_NAME}}", "none")
+                f = f.replace("{{SCHEDULER_IN_COSCHED}}", "none")
             
             if "worker-node-affinity" in k8s_parameters.keys():
                 NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()

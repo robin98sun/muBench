@@ -22,7 +22,7 @@ spec:
         version: "1.0"
         prometheus.io/scrape: 'true'
         qos-group: {{QOS_GROUP}}
-        cosched.io/scheduler-name: {{COSCHED_SCHEDULER_NAME}}
+        cosched.io/scheduler-name: {{SCHEDULER_IN_COSCHED}}
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
