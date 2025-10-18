@@ -254,15 +254,16 @@ def start_worker():
         #     ]
         # }
         def is_ms_trace(trace):
-            return trace is not None and"trace_type" in trace and trace["trace_type"] == "ms-trace"
+            return trace is not None and "trace_type" in trace and trace["trace_type"] == "ms-trace"
 
         # if POST check the presence of a trace
         trace=dict()
         if request.method == 'POST':
             trace = request.json
             if is_ms_trace(trace):
-                app.logger.debug(f'input: {trace}')
+                app.logger.debug(f'ms-trace trace: {trace}')
             else:
+                app.logger.debug(f'muBench trace: {trace}')
                 # sanity_check
                 assert len(trace.keys())==1, 'bad trace format'
                 assert ID == list(trace)[0].split(traceEscapeString)[0], "bad trace format, ID"
