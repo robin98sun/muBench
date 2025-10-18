@@ -88,12 +88,17 @@ def read_config_files():
                                 app.logger.error(f'host file {host_file["name"]} not found at its mount path {host_file["mount_path"]}')
                                 continue
                             with open(host_file["mount_path"], 'r') as hf:
-                                if host_file["host_path"].split(".")[-1] == "json":
-                                    res[service]["_host_files_"][host_file["name"]] = json.load(hf)
-                                else:
-                                    res[service]["_host_files_"][host_file["name"]] = hf.read()
-                                hf.close()
-                            app.logger.debug(f'read host file {host_file["name"]} from its mount path {host_file["mount_path"]} whos host path is {host_file["host_path"]}')
+                                try:
+                                    if host_file["host_path"].split(".")[-1] == "json":
+                                        res[service]["_host_files_"][host_file["name"]] = json.load(hf)
+                                    else:
+                                        res[service]["_host_files_"][host_file["name"]] = hf.read()
+                                    app.logger.debug(f'successfully read host file {host_file["name"]} from its mount path {host_file["mount_path"]} whos host path is {host_file["host_path"]}')
+                                except Exception as e:
+                                    app.logger.warning(f'error while reading host file {host_file["name"]} from its mount path {host_file["mount_path"]} whos host path is {host_file["host_path"]}: {e}')
+                                finally:
+                                    hf.close()
+                            
                 res[service]["host-files"] = res[service]["_host_files_"]
                 del res[service]["_host_files_"]
             else:
