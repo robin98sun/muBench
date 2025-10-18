@@ -27,6 +27,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
         qos-group: {{QOS_GROUP}}
+        sidecar.istio.io/userVolume: |
+          [{"name":"schedsock", "hostPath": {"path":"/var/run/node-scheduler", "type": "DirectoryOrCreate"}}]
+        sidecar.istio.io/userVolumeMount: |
+          [{"name": "schedsock", "mountPath":"/var/run/node-scheduler", "readonly":false}]
     spec:
       terminationGracePeriodSeconds : 3
       schedulerName: {{SCHEDULER_NAME}}
