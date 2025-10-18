@@ -23,6 +23,7 @@
          "values": ["true"]
       },
       "ms-replica": 1,
+      "cosched-scheduler-name": "query-scheduler",
       "host-files": [
         {
             "name": "cpu-profiling-result", 
