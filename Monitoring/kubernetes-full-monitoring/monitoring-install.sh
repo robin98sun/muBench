@@ -3,6 +3,8 @@
 microservice_namespace="ms"
 head_node_name="master"
 master_ip="master_ip"
+docker_registry_server="docker.io"
+skip_registry_auth=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --ns=*)
@@ -17,11 +19,36 @@ while [[ $# -gt 0 ]]; do
             master_ip="${1#*=}"
             shift
             ;;
+        --docker-registry=*)
+            docker_registry_server="${1#*=}"
+            shift
+            ;;
+        --skip-registry-auth)
+            skip_registry_auth=true
+            shift
+            ;;
         *)
             shift
             ;;
     esac
 done
+
+echo "Monitoring installation script"
+echo "Usage: $0 [options]"
+echo "Options:"
+echo "  --ns=<namespace>                    Microservice namespace (default: ms)"
+echo "  --head-node-name=<name>            Head node name (default: master)"
+echo "  --master-ip=<ip>                   Master IP address (default: master_ip)"
+echo "  --docker-registry=<registry>      Docker registry server (default: 44.251.28.34:30500)"
+echo "  --skip-registry-auth               Skip creating registry authentication secret"
+echo ""
+echo "Current configuration:"
+echo "  Microservice namespace: ${microservice_namespace}"
+echo "  Head node name: ${head_node_name}"
+echo "  Master IP: ${master_ip}"
+echo "  Docker registry: ${docker_registry_server}"
+echo "  Skip registry auth: ${skip_registry_auth}"
+echo ""
 
 
 
@@ -150,7 +177,34 @@ helm repo update
 echo "kubectl create namespace istio-system"
 kubectl create namespace istio-system
 
+# Create registry secret for private Docker registry (only if authentication is required)
+if [ "$skip_registry_auth" = true ]; then
+    echo "Skipping registry secret creation (--skip-registry-auth flag set)"
+else
+    echo "Creating registry secret for private Docker registry: ${docker_registry_server}"
+    kubectl create secret docker-registry registry-secret \
+        --docker-server=${docker_registry_server} \
+        --docker-username=admin \
+        --docker-password=admin123 \
+        --docker-email=admin@example.com -n istio-system || echo "Registry secret already exists"
+fi
+
 cat <<EOF > istio-values.yaml
+
+global:
+  hub: ${docker_registry_server}
+  imagePullPolicy: IfNotPresent
+EOF
+
+# Only add imagePullSecrets if authentication is not skipped
+if [ "$skip_registry_auth" = false ]; then
+    cat <<EOF >> istio-values.yaml
+  imagePullSecrets:
+    - name: registry-secret
+EOF
+fi
+
+cat <<EOF >> istio-values.yaml
 
 pilot:
   nodeSelector:
@@ -165,6 +219,21 @@ pilot:
             operator: In
             values:
             - ${head_node_name}
+
+# Disable TLS verification for private registry
+gateways:
+  istio-ingressgateway:
+    nodeSelector:
+      kubernetes.io/hostname: ${head_node_name}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+              - ${head_node_name}
 EOF
 
 echo "helm install istio-base istio/base -n istio-system -f istio-values.yaml"
