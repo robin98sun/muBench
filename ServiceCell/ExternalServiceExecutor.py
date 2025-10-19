@@ -42,7 +42,7 @@ def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context
                 for key, value in request_headers.items():
                     headers[key] = value
             json_payload = json.dumps(ms_trace_input)
-            app.logger.debug(f'Requesting external service via REST: {service}')
+            app.logger.debug(f'Requesting external service via REST: {service}, headers: {headers}')
             return s.post(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}',data=json_payload,headers=headers)
 
         elif len(trace)==0 and len(query_string)==0:
