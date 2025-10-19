@@ -24,12 +24,12 @@ import mub_pb2 as pb2
 import grpc
 
 cosched_headers_list = [
-    'qos-group',
-    'slo-latency-ms',
-    'slo-pct',
-    'budget',
-    'caller',
-    'trace-id',
+    'cosched-qos-group',
+    'cosched-slo-latency-ms',
+    'cosched-slo-pct',
+    'cosched-budget',
+    'cosched-caller',
+    'cosched-trace-id',
 ]
 # Configuration of global variables
 
@@ -342,6 +342,7 @@ def start_worker():
             if "external_services" in trace.keys() and trace["external_services"] is not None and len(trace["external_services"])>0:
                 my_service_graph = trace["external_services"]
                 extra_headers = get_cosched_headers(request.headers)
+                extra_headers["cosched-caller"] = ID
                 app.logger.debug(f'sending external service request with extra headers: {extra_headers}')
                 service_error_dict, service_response_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers, request_headers=extra_headers)
                 body = f"{body}||{(time.time()-start_request_processing)*1000}||{'!'.join(list(service_response_dict.values()) + list(service_error_dict.values()))}"
