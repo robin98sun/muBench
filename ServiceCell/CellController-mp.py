@@ -53,7 +53,7 @@ def get_cosched_headers(headers):
     cosched_headers = dict()
     for key, value in headers.items():
         if key.lower() in cosched_headers_list:
-            cosched_headers[key] = value
+            cosched_headers[key.lower()] = value
     return cosched_headers
 
 # Flask APP
