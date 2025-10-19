@@ -49,6 +49,13 @@ jaeger_headers_list = [
     'x-cloud-trace-context',
 ]
 
+def get_cosched_headers(headers):
+    cosched_headers = dict()
+    for key, value in headers.items():
+        if key.lower() in cosched_headers_list:
+            cosched_headers[key] = value
+    return cosched_headers
+
 # Flask APP
 app = Flask(__name__)
 ID = os.environ["APP"]
@@ -272,12 +279,9 @@ def start_worker():
                 return make_response(json.dumps({"message": "Request body is none"}), 500)
 
             if is_ms_trace(trace):
-                extra_headers = dict()
-                for hdr in cosched_headers_list:
-                    extra_headers[hdr] = request.headers.get(hdr, '')
+                extra_headers = get_cosched_headers(request.headers)
                 app.logger.debug(f'ms-trace trace: {trace}')
                 app.logger.debug(f'extra headers: {extra_headers}')
-                app.logger.debug(f'request headers: {request.headers}')
             else:
                 app.logger.debug(f'muBench trace: {trace}')
                 # sanity_check
@@ -337,10 +341,7 @@ def start_worker():
         if is_ms_trace(trace):
             if "external_services" in trace.keys() and trace["external_services"] is not None and len(trace["external_services"])>0:
                 my_service_graph = trace["external_services"]
-                extra_headers = dict()
-                for key, value in request.headers.items():
-                    if key in cosched_headers_list:
-                        extra_headers[key] = value
+                extra_headers = get_cosched_headers(request.headers)
                 app.logger.debug(f'sending external service request with extra headers: {extra_headers}')
                 service_error_dict, service_response_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers, request_headers=extra_headers)
                 body = f"{body}||{(time.time()-start_request_processing)*1000}||{'!'.join(list(service_response_dict.values()) + list(service_error_dict.values()))}"
