@@ -23,7 +23,14 @@ import mub_pb2_grpc as pb2_grpc
 import mub_pb2 as pb2
 import grpc
 
-
+cosched_headers_list = [
+    'qos-group',
+    'slo-latency-ms',
+    'slo-pct',
+    'budget',
+    'caller',
+    'trace-id',
+]
 # Configuration of global variables
 
 jaeger_headers_list = [
@@ -265,7 +272,12 @@ def start_worker():
                 return make_response(json.dumps({"message": "Request body is none"}), 500)
 
             if is_ms_trace(trace):
+                extra_headers = dict()
+                for key, value in request.headers.items():
+                    if key in cosched_headers_list:
+                        extra_headers[key] = value
                 app.logger.debug(f'ms-trace trace: {trace}')
+                app.logger.debug(f'extra headers: {extra_headers}')
             else:
                 app.logger.debug(f'muBench trace: {trace}')
                 # sanity_check
@@ -325,7 +337,11 @@ def start_worker():
         if is_ms_trace(trace):
             if "external_services" in trace.keys() and trace["external_services"] is not None and len(trace["external_services"])>0:
                 my_service_graph = trace["external_services"]
-                service_error_dict, service_response_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers)
+                extra_headers = dict()
+                for key, value in request.headers.items():
+                    if key in cosched_headers_list:
+                        extra_headers[key] = value
+                service_error_dict, service_response_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers, request_headers=extra_headers)
                 body = f"{body}||{(time.time()-start_request_processing)*1000}||{'!'.join(list(service_response_dict.values()) + list(service_error_dict.values()))}"
             else:
                 body = f"{body}||{(time.time()-start_request_processing)*1000}||null"

@@ -32,12 +32,15 @@ def init_gRPC(my_service_graph, workmodel, server_port, app):
             # bind the client and the server
             service_stub[service] = pb2_grpc.MicroServiceStub(channel)
 
-def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context, ms_trace_input=None):
+def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context, ms_trace_input=None, request_headers=None):
     try:
         service_no_escape = service.split("__")[0]
         if ms_trace_input:
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             headers.update(jaeger_context)
+            if request_headers:
+                for key, value in request_headers.items():
+                    headers[key] = value
             json_payload = json.dumps(ms_trace_input)
             app.logger.debug(f'Requesting external service via REST: {service}')
             return s.post(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}',data=json_payload,headers=headers)
@@ -148,7 +151,7 @@ def run_external_service(services_group, work_model, query_string, trace, app, t
 
 
 # for MS TRACE, the service_series is a list of services to be called in sequence
-def request_external_service_ms_trace(service_series, id, work_model, s, trace, query_string, app, trace_context):
+def request_external_service_ms_trace(service_series, id, work_model, s, trace, query_string, app, trace_context, extra_headers=None):
     app.logger.info("**** Start SERVICES in thread: %s (via MS TRACE)" % str([service["name"] for service in service_series]))
     start_time = time.time()
     service_error_dict = dict()
@@ -161,7 +164,7 @@ def request_external_service_ms_trace(service_series, id, work_model, s, trace, 
         service_input = service["input"]
         service_input["trace_type"] = "ms-trace"
         try:
-            r = request_function(service_name,id,work_model,s,trace,query_string, app, trace_context, ms_trace_input=service_input)
+            r = request_function(service_name,id,work_model,s,trace,query_string, app, trace_context, ms_trace_input=service_input, request_headers=extra_headers)
             if len(r.text) < 100:
                 app.logger.info("Service: %s -> Status_code: %s -- text: %s" % (service_name, r.status_code, r.text))
             else:
@@ -182,16 +185,22 @@ def request_external_service_ms_trace(service_series, id, work_model, s, trace, 
 # external_services is a 2-dimensional list
 # the first dimension is concurrent service series, which are run in parallel
 # the second dimension, i.e., in each service series, are the services to be called in sequence
-def run_external_service_ms_trace(external_services, work_model, query_string, trace, app, trace_context=None):
+def run_external_service_ms_trace(external_services, work_model, query_string, trace, app, trace_context=None, request_headers=None):
     app.logger.info("** EXTERNAL SERVICES (via MS TRACE)")
     service_error_dict = dict()
     service_response_dict = dict()
     number_of_groups = len(external_services)
+
+    extra_headers = dict()
+    if request_headers:
+        for key, value in request_headers.items():
+            extra_headers[key] = value
+
     pool = ThreadPoolExecutor(number_of_groups)
     futures = list()
     id = 0
     for service_series in external_services:
-        futures.append(pool.submit(request_external_service_ms_trace, service_series, id, work_model, s, trace, query_string, app, trace_context))
+        futures.append(pool.submit(request_external_service_ms_trace, service_series, id, work_model, s, trace, query_string, app, trace_context, extra_headers))
         id = id + 1
     wait(futures)
     for x in as_completed(futures):
