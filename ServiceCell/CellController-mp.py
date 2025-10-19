@@ -273,11 +273,11 @@ def start_worker():
 
             if is_ms_trace(trace):
                 extra_headers = dict()
-                for key, value in request.headers.items():
-                    if key in cosched_headers_list:
-                        extra_headers[key] = value
+                for hdr in cosched_headers_list:
+                    extra_headers[hdr] = request.headers.get(hdr, '')
                 app.logger.debug(f'ms-trace trace: {trace}')
                 app.logger.debug(f'extra headers: {extra_headers}')
+                app.logger.debug(f'request headers: {request.headers}')
             else:
                 app.logger.debug(f'muBench trace: {trace}')
                 # sanity_check
