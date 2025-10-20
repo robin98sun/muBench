@@ -32,7 +32,8 @@ spec:
             {"name":"schedsock", "hostPath": {"path":"/var/run/node-scheduler", "type": "DirectoryOrCreate"}},
             { "name":"registry-ca",
               "secret":{ "secretName":"registry-ca" }
-            }
+            },
+            {"name":"cosched-wasm","configMap":{"name":"cosched-wasm"}}
           ]
         sidecar.istio.io/userVolumeMount: |
           [
@@ -40,7 +41,8 @@ spec:
             { "name":"registry-ca",
               "mountPath":"/etc/registry-ca",
               "readonly": true
-            }
+            },
+            {"name":"cosched-wasm","mountPath":"/etc/istio/wasm","readonly":true}
           ]
         proxy.istio.io/config: |
           {"proxyMetadata":{"SSL_CERT_DIR":"/etc/ssl/certs:/etc/registry-ca"}}
