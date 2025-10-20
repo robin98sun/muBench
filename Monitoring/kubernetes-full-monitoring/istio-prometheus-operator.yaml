@@ -16,7 +16,7 @@ spec:
   jobLabel: envoy-stats
   podMetricsEndpoints:
   - path: /stats/prometheus
-    port: 15090
+    port: "15090"
     interval: 15s
     relabelings:
     - action: keep
