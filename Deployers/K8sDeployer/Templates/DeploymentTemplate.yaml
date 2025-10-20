@@ -29,12 +29,21 @@ spec:
         qos-group: {{QOS_GROUP}}
         sidecar.istio.io/userVolume: |
           [
-            {"name":"schedsock", "hostPath": {"path":"/var/run/node-scheduler", "type": "DirectoryOrCreate"}}
+            {"name":"schedsock", "hostPath": {"path":"/var/run/node-scheduler", "type": "DirectoryOrCreate"}},
+            { "name":"registry-ca",
+              "secret":{ "secretName":"registry-ca" }
+            }
           ]
         sidecar.istio.io/userVolumeMount: |
           [
-            {"name": "schedsock", "mountPath":"/var/run/node-scheduler", "readonly":false}
+            {"name": "schedsock", "mountPath":"/var/run/node-scheduler", "readonly":false},
+            { "name":"registry-ca",
+              "mountPath":"/etc/registry-ca",
+              "readonly": true
+            }
           ]
+        proxy.istio.io/config: |
+          {"proxyMetadata":{"SSL_CERT_DIR":"/etc/ssl/certs:/etc/registry-ca"}}
     spec:
       terminationGracePeriodSeconds : 3
       schedulerName: {{SCHEDULER_NAME}}
