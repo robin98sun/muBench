@@ -196,14 +196,15 @@ else
         --docker-email=admin@example.com -n istio-system || echo "Registry secret already exists"
 fi
 
-cat <<EOF > istio-values.yaml
+if [ -z "${docker_registry_cert}" ]; then
+  echo "No Docker registry certificate provided, using default values"
+  echo "----------------------------------------"
+  cat <<EOF > istio-values.yaml
 
 global:
   hub: ${docker_registry_server}
   imagePullPolicy: IfNotPresent
 EOF
-
-if [ -z "${docker_registry_cert}" ]; then
 # Only add imagePullSecrets if authentication is not skipped
   if [ "$skip_registry_auth" = false ]; then
     cat <<EOF >> istio-values.yaml
@@ -311,9 +312,13 @@ gateways:
               - ${head_node_name}
 EOF
 
+  echo "----------------------------------------"
+  echo "istio-values-with-cert.yaml"
+  cat istio-values-with-cert.yaml
+  echo "----------------------------------------"
   echo "helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml"
   helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml
-
+  echo "----------------------------------------"
   echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
   helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
 fi
