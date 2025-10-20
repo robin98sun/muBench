@@ -5,6 +5,7 @@ head_node_name="master"
 master_ip="master_ip"
 docker_registry_server="docker.io"
 skip_registry_auth=false
+docker_registry_cert=""
 while [[ $# -gt 0 ]]; do
     case $1 in
         --ns=*)
@@ -27,6 +28,10 @@ while [[ $# -gt 0 ]]; do
             skip_registry_auth=true
             shift
             ;;
+        --docker-registry-cert=*)
+            docker_registry_cert="${1#*=}"
+            shift
+            ;;
         *)
             shift
             ;;
@@ -41,6 +46,7 @@ echo "  --head-node-name=<name>            Head node name (default: master)"
 echo "  --master-ip=<ip>                   Master IP address (default: master_ip)"
 echo "  --docker-registry=<registry>      Docker registry server (default: 44.251.28.34:30500)"
 echo "  --skip-registry-auth               Skip creating registry authentication secret"
+echo "  --docker-registry-cert=<cert>      Docker registry certificate (default: empty)"
 echo ""
 echo "Current configuration:"
 echo "  Microservice namespace: ${microservice_namespace}"
@@ -48,6 +54,7 @@ echo "  Head node name: ${head_node_name}"
 echo "  Master IP: ${master_ip}"
 echo "  Docker registry: ${docker_registry_server}"
 echo "  Skip registry auth: ${skip_registry_auth}"
+echo "  Docker registry certificate: ${docker_registry_cert}"
 echo ""
 
 
@@ -196,15 +203,16 @@ global:
   imagePullPolicy: IfNotPresent
 EOF
 
+if [ -z "${docker_registry_cert}" ]; then
 # Only add imagePullSecrets if authentication is not skipped
-if [ "$skip_registry_auth" = false ]; then
+  if [ "$skip_registry_auth" = false ]; then
     cat <<EOF >> istio-values.yaml
   imagePullSecrets:
     - name: registry-secret
 EOF
-fi
+  fi
 
-cat <<EOF >> istio-values.yaml
+  cat <<EOF >> istio-values.yaml
 
 pilot:
   nodeSelector:
@@ -236,11 +244,74 @@ gateways:
               - ${head_node_name}
 EOF
 
-echo "helm install istio-base istio/base -n istio-system -f istio-values.yaml"
-helm install istio-base istio/base -n istio-system -f istio-values.yaml
+  echo "helm install istio-base istio/base -n istio-system -f istio-values.yaml"
+  helm install istio-base istio/base -n istio-system -f istio-values.yaml
+  echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml"
+  helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml
+else
+  echo "Adding CA certificate to Istio configuration..."
+  
+  # Read the certificate content
+  cert_content=$(cat ${docker_registry_cert})
+  
+  # Create istio-values with CA certificate
+  cat <<EOF > istio-values-with-cert.yaml
 
-echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml"
-helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml
+global:
+  hub: ${docker_registry_server}
+  imagePullPolicy: IfNotPresent
+EOF
+
+  # Only add imagePullSecrets if authentication is not skipped
+  if [ "$skip_registry_auth" = false ]; then
+    cat <<EOF >> istio-values-with-cert.yaml
+  imagePullSecrets:
+    - name: registry-secret
+EOF
+  fi
+
+  cat <<EOF >> istio-values-with-cert.yaml
+
+pilot:
+  nodeSelector:
+    kubernetes.io/hostname: ${head_node_name}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - ${head_node_name}
+
+# Add CA certificate to mesh configuration
+meshConfig:
+  caCertificates:
+    - pem: |
+\$(echo "\${cert_content}" | sed 's/^/        /')
+
+gateways:
+  istio-ingressgateway:
+    nodeSelector:
+      kubernetes.io/hostname: ${head_node_name}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+              - ${head_node_name}
+EOF
+
+  echo "helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml"
+  helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml
+
+  echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
+  helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
+fi
 
 cat <<EOF > istio-gateway-values.yaml
 nodeSelector:
