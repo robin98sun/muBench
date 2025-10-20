@@ -243,10 +243,15 @@ gateways:
               values:
               - ${head_node_name}
 EOF
-
+  echo "----------------------------------------"
+  echo "istio-values.yaml"
+  cat istio-values.yaml
+  echo "----------------------------------------"
   echo "helm install istio-base istio/base -n istio-system -f istio-values.yaml"
   helm install istio-base istio/base -n istio-system -f istio-values.yaml
+  echo "----------------------------------------"
   echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml"
+  echo "----------------------------------------"
   helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml
 else
   echo "Adding CA certificate to Istio configuration..."
