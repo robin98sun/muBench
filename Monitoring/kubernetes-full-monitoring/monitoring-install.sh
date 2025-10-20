@@ -294,7 +294,7 @@ pilot:
 meshConfig:
   caCertificates:
     - pem: |
-\$(echo "\${cert_content}" | sed 's/^/        /')
+$(echo "${cert_content}" | sed 's/^/        /')
 
 gateways:
   istio-ingressgateway:
