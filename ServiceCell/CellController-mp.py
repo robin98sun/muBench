@@ -345,7 +345,7 @@ def start_worker():
                 extra_headers["cosched-caller"] = ID
                 app.logger.debug(f'sending external service request with extra headers: {extra_headers}')
                 service_error_dict, service_response_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers, request_headers=extra_headers)
-                body = f"{body}||{(time.time()-start_request_processing)*1000}||{'!'.join(list(service_response_dict.values()) + list(service_error_dict.values()))}"
+                body = f"{body}||{(time.time()-start_request_processing)*1000}||{'!'.join(list(service_response_dict.values()) + [str(e) for e in list(service_error_dict.values())])}"
             else:
                 body = f"{body}||{(time.time()-start_request_processing)*1000}||null"
                     
@@ -379,7 +379,7 @@ def start_worker():
 
         return response
     except Exception as err:
-        app.logger.error("Error in start_worker", err)
+        app.logger.error("Error in start_worker, error: %s", str(err))
         # app.logger.error(traceback.format_exc())
         return json.dumps({"message": "Error"}), 500
 
