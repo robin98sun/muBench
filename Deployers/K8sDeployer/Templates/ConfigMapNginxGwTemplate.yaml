@@ -6,10 +6,10 @@ metadata:
 data:
   nginx.conf: |
     user nginx;
-    worker_processes  1;
+    worker_processes  8;
     error_log  /etc/nginx/error.log;
     events {
-      worker_connections  10240;
+      worker_connections  1024000;
     }
     http {
         # Define a map to generate timestamp at request start
