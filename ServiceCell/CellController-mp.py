@@ -356,10 +356,9 @@ def start_worker():
                 service_error_dict = run_external_service(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers)
         
         if len(service_error_dict):
-            app.logger.error(service_error_dict)
             app.logger.error("Error in request external services")
-            app.logger.error(service_error_dict)
-            return make_response(json.dumps({"message": "Error in external services request"}), 500)
+            app.logger.error(";\n".join([str(e) for e in list(service_error_dict.values())]))
+            return make_response(json.dumps({"message": "Error in external services request: " + ';\n'.join([str(e) for e in list(service_error_dict.values())])}), 500)
         
 
         app.logger.info("############### EXTERNAL SERVICES FINISHED! ###############")
@@ -381,7 +380,7 @@ def start_worker():
     except Exception as err:
         app.logger.error("Error in start_worker, error: %s", str(err))
         # app.logger.error(traceback.format_exc())
-        return json.dumps({"message": "Error"}), 500
+        return json.dumps({"message": "Error in start_worker: " + str(err)}), 500
 
 # Prometheus
 @app.route('/metrics')
