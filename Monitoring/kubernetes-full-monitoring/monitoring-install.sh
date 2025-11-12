@@ -321,6 +321,10 @@ EOF
   echo "----------------------------------------"
   echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
   helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
+  if [[ $? -ne 0 ]]; then
+    echo "ERROR: Failed to install istiod"
+    exit 1
+  fi
 fi
 
 cat <<EOF > istio-gateway-values.yaml
