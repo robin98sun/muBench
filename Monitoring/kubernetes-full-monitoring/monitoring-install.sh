@@ -232,7 +232,7 @@ EOF
 
 pilot:
   nodeSelector:
-    node-role.cosched.io/standby-worker: true
+    node-role.cosched.io/standby-worker: "true"
   # Or full affinity if you want stricter control
   affinity:
     nodeAffinity:
@@ -242,7 +242,7 @@ pilot:
           - key: node-role.cosched.io/standby-worker
             operator: In
             values:
-            - true
+            - "true"
 
 # Disable TLS verification for private registry
 gateways:
