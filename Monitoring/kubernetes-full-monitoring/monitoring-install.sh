@@ -343,6 +343,9 @@ gateways:
 EOF
 
   echo "----------------------------------------"
+  echo "pwd: $(pwd)"
+  ls -la
+  echo "----------------------------------------"
   echo "istio-values-with-cert.yaml"
   cat istio-values-with-cert.yaml
   echo "----------------------------------------"
