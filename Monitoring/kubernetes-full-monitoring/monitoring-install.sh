@@ -6,6 +6,9 @@ master_ip="master_ip"
 docker_registry_server="docker.io"
 skip_registry_auth=false
 docker_registry_cert=""
+node_label_key="" 
+node_label_value=""
+istio_replica_count=1
 while [[ $# -gt 0 ]]; do
     case $1 in
         --ns=*)
@@ -30,6 +33,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         --docker-registry-cert=*)
             docker_registry_cert="${1#*=}"
+            shift
+            ;;
+        --node-label-key=*)
+            node_label_key="${1#*=}"
+            shift
+            ;;
+        --node-label-value=*)
+            node_label_value="${1#*=}"
+            shift
+            ;;
+        --istio-replica-count=*)
+            istio_replica_count="${1#*=}"
             shift
             ;;
         *)
@@ -217,32 +232,37 @@ EOF
 
 pilot:
   nodeSelector:
-    kubernetes.io/hostname: ${head_node_name}
+    openwhisk-role: edge
   # Or full affinity if you want stricter control
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: kubernetes.io/hostname
+          - key: openwhisk-role
             operator: In
             values:
-            - ${head_node_name}
+            - edge
 
 # Disable TLS verification for private registry
 gateways:
   istio-ingressgateway:
+    replicaCount: ${istio_replica_count}
+    resources:
+      limits:
+        cpu: "4"
+        memory: "4Gi"
     nodeSelector:
-      kubernetes.io/hostname: ${head_node_name}
+      openwhisk-role: edge
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: kubernetes.io/hostname
+            - key: openwhisk-role
               operator: In
               values:
-              - ${head_node_name}
+              - edge
 EOF
   echo "----------------------------------------"
   echo "istio-values.yaml"
@@ -254,7 +274,9 @@ EOF
   echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml"
   echo "----------------------------------------"
   helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml
+
 else
+
   echo "Adding CA certificate to Istio configuration..."
   
   # Read the certificate content
@@ -280,16 +302,16 @@ EOF
 
 pilot:
   nodeSelector:
-    kubernetes.io/hostname: ${head_node_name}
+    openwhisk-role: edge
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: kubernetes.io/hostname
+          - key: openwhisk-role
             operator: In
             values:
-            - ${head_node_name}
+            - edge
 
 # Add CA certificate to mesh configuration
 meshConfig:
@@ -299,17 +321,22 @@ $(echo "${cert_content}" | sed 's/^/        /')
 
 gateways:
   istio-ingressgateway:
+    replicaCount: ${istio_replica_count}
+    resources:
+      limits:
+        cpu: "4"
+        memory: "4Gi"
     nodeSelector:
-      kubernetes.io/hostname: ${head_node_name}
+      openwhisk-role: edge
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: kubernetes.io/hostname
+            - key: openwhisk-role
               operator: In
               values:
-              - ${head_node_name}
+              - edge
 EOF
 
   echo "----------------------------------------"
@@ -328,6 +355,11 @@ EOF
 fi
 
 cat <<EOF > istio-gateway-values.yaml
+replicaCount: ${istio_replica_count}
+resources:
+  limits:
+    cpu: "4"
+    memory: "4Gi"
 nodeSelector:
   kubernetes.io/hostname: ${head_node_name}
 affinity:
