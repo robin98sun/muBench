@@ -375,6 +375,8 @@ EOF
 
 echo "helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml"
 helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml
+echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{\"spec\":{\"progressDeadlineSeconds\":3600}}'"
+kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{"spec":{"progressDeadlineSeconds":3600}}'
 
 echo "kubectl label namespace ${microservice_namespace} istio-injection=enabled"
 kubectl label namespace ${microservice_namespace} istio-injection=enabled
