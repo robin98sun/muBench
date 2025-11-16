@@ -390,6 +390,10 @@ timeout=600  # 10 minutes
 elapsed=0
 interval=10
 
+echo "Installing jq for JSON processing..."
+sudo apt update && sudo apt install -y jq 
+
+
 while [[ $elapsed -lt $timeout ]]; do
   ready=$(kubectl -n istio-system get pods -l app=istio-ingressgateway -o json | \
     jq '[.items[] | select(.status.phase=="Running") | select(.status.containerStatuses[]?.ready==true)] | length')
