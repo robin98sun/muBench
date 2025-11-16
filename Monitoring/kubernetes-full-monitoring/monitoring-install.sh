@@ -268,12 +268,12 @@ EOF
   echo "istio-values.yaml"
   cat istio-values.yaml
   echo "----------------------------------------"
-  echo "helm install istio-base istio/base -n istio-system -f istio-values.yaml"
-  helm install istio-base istio/base -n istio-system -f istio-values.yaml
+  echo "helm upgrade --install istio-base istio/base -n istio-system -f istio-values.yaml"
+  helm upgrade --install istio-base istio/base -n istio-system -f istio-values.yaml
   echo "----------------------------------------"
-  echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml"
+  echo "helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml"
   echo "----------------------------------------"
-  helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml
+  helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml
 
 else
 
@@ -343,11 +343,11 @@ EOF
   echo "istio-values-with-cert.yaml"
   cat istio-values-with-cert.yaml
   echo "----------------------------------------"
-  echo "helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml"
-  helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml
+  echo "helm upgrade --install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml"
+  helm upgrade --install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml
   echo "----------------------------------------"
-  echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
-  helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
+  echo "helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
+  helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
   if [[ $? -ne 0 ]]; then
     echo "ERROR: Failed to install istiod"
     exit 1
@@ -373,8 +373,8 @@ affinity:
           - standby-worker
 EOF
 
-echo "helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml"
-helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml
+echo "helm upgrade --install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml"
+helm upgrade --install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml
 echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{\"spec\":{\"progressDeadlineSeconds\":3600}}'"
 kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{"spec":{"progressDeadlineSeconds":3600}}'
 
@@ -409,14 +409,13 @@ deployment:
     kubernetes.io/hostname: ${head_node_name}
 EOF
 
-echo "helm install -n istio-system -f kiali-values.yaml -f kiali-scheduling.yaml kiali-server kiali/kiali-server"
-helm install \
+echo "helm upgrade --install -n istio-system -f kiali-values.yaml -f kiali-scheduling.yaml kiali-server kiali/kiali-server"
+helm upgrade --install \
   -n istio-system \
   -f kiali-values.yaml \
   -f kiali-scheduling.yaml \
   kiali-server \
   kiali/kiali-server
-
 #Kiali NodePort Service (30003)
 echo "kubectl apply -f kiali-nodeport.yaml"
 kubectl apply -f kiali-nodeport.yaml
