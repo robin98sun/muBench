@@ -345,6 +345,10 @@ EOF
   echo "----------------------------------------"
   echo "helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml"
   helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml
+  if [[ $? -ne 0 ]]; then
+    echo "ERROR: Failed to install istio-base"
+    exit 1
+  fi
   echo "----------------------------------------"
   echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
   helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
@@ -353,6 +357,7 @@ EOF
     exit 1
   fi
 fi
+echo "----------------------------------------"
 
 cat <<EOF > istio-gateway-values.yaml
 replicaCount: ${istio_replica_count}
@@ -379,6 +384,7 @@ if [[ $? -ne 0 ]]; then
   echo "ERROR: Failed to install istio-ingressgateway"
   exit 1
 fi
+echo "----------------------------------------"
 echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{\"spec\":{\"progressDeadlineSeconds\":3600}}'"
 kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{"spec":{"progressDeadlineSeconds":3600}}'
 if [[ $? -ne 0 ]]; then
