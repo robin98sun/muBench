@@ -250,23 +250,20 @@ gateways:
     replicaCount: ${istio_replica_count}
     resources:
       limits:
-        cpu: 4
-        memory: 4Gi
+        cpu: "4"
+        memory: "4Gi"
     nodeSelector:
       node-role.cosched.io: standby-worker
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
-            - matchExpressions:
-              - key: node-role.cosched.io
-                operator: In
-                values:
-                - standby-worker
+          - matchExpressions:
+            - key: node-role.cosched.io
+              operator: In
+              values:
+              - standby-worker
 EOF
-  echo "----------------------------------------"
-  echo "pwd: $(pwd)"
-  ls -la
   echo "----------------------------------------"
   echo "istio-values.yaml"
   cat istio-values.yaml
@@ -310,11 +307,11 @@ pilot:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
-            - matchExpressions:
-              - key: node-role.cosched.io
-                operator: In
-                values:
-                - standby-worker
+        - matchExpressions:
+          - key: node-role.cosched.io
+            operator: In
+            values:
+            - standby-worker
 
 # Add CA certificate to mesh configuration
 meshConfig:
@@ -327,8 +324,8 @@ gateways:
     replicaCount: ${istio_replica_count}
     resources:
       limits:
-        cpu: 4
-        memory: 4Gi
+        cpu: "4"
+        memory: "4Gi"
     nodeSelector:
       node-role.cosched.io: standby-worker
     affinity:
@@ -343,18 +340,11 @@ gateways:
 EOF
 
   echo "----------------------------------------"
-  echo "pwd: $(pwd)"
-  ls -la
-  echo "----------------------------------------"
   echo "istio-values-with-cert.yaml"
   cat istio-values-with-cert.yaml
   echo "----------------------------------------"
   echo "helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml"
   helm install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml
-  if [[ $? -ne 0 ]]; then
-    echo "ERROR: Failed to install istio-base"
-    exit 1
-  fi
   echo "----------------------------------------"
   echo "helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
   helm install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
@@ -363,14 +353,13 @@ EOF
     exit 1
   fi
 fi
-echo "----------------------------------------"
 
 cat <<EOF > istio-gateway-values.yaml
 replicaCount: ${istio_replica_count}
 resources:
   limits:
-    cpu: 4
-    memory: 4Gi
+    cpu: "4"
+    memory: "4Gi"
 nodeSelector:
   node-role.cosched.io: standby-worker
 affinity:
@@ -386,17 +375,8 @@ EOF
 
 echo "helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml"
 helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml
-if [[ $? -ne 0 ]]; then
-  echo "ERROR: Failed to install istio-ingressgateway"
-  exit 1
-fi
-echo "----------------------------------------"
 echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{\"spec\":{\"progressDeadlineSeconds\":3600}}'"
 kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{"spec":{"progressDeadlineSeconds":3600}}'
-if [[ $? -ne 0 ]]; then
-  echo "ERROR: Failed to patch istio-ingressgateway"
-  exit 1
-fi
 
 echo "kubectl label namespace ${microservice_namespace} istio-injection=enabled"
 kubectl label namespace ${microservice_namespace} istio-injection=enabled
