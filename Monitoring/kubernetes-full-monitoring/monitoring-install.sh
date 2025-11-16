@@ -250,8 +250,8 @@ gateways:
     replicaCount: ${istio_replica_count}
     resources:
       limits:
-        cpu: "4"
-        memory: "4Gi"
+        cpu: 4
+        memory: 4Gi
     nodeSelector:
       node-role.cosched.io: standby-worker
     affinity:
@@ -324,8 +324,8 @@ gateways:
     replicaCount: ${istio_replica_count}
     resources:
       limits:
-        cpu: "4"
-        memory: "4Gi"
+        cpu: 4
+        memory: 4Gi
     nodeSelector:
       node-role.cosched.io: standby-worker
     affinity:
@@ -363,8 +363,8 @@ cat <<EOF > istio-gateway-values.yaml
 replicaCount: ${istio_replica_count}
 resources:
   limits:
-    cpu: "4"
-    memory: "4Gi"
+    cpu: 4
+    memory: 4Gi
 nodeSelector:
   node-role.cosched.io: standby-worker
 affinity:
