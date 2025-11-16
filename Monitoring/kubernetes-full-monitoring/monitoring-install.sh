@@ -265,6 +265,9 @@ gateways:
                 - standby-worker
 EOF
   echo "----------------------------------------"
+  echo "pwd: $(pwd)"
+  ls -la
+  echo "----------------------------------------"
   echo "istio-values.yaml"
   cat istio-values.yaml
   echo "----------------------------------------"
