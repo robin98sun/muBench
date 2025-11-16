@@ -232,17 +232,17 @@ EOF
 
 pilot:
   nodeSelector:
-    node-role.cosched.io/standby-worker: "true"
+    node-role.cosched.io: standby-worker
   # Or full affinity if you want stricter control
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: node-role.cosched.io/standby-worker
+          - key: node-role.cosched.io
             operator: In
             values:
-            - "true"
+            - standby-worker
 
 # Disable TLS verification for private registry
 gateways:
@@ -253,16 +253,16 @@ gateways:
         cpu: "4"
         memory: "4Gi"
     nodeSelector:
-      node-role.cosched.io/standby-worker: "true"
+      node-role.cosched.io: standby-worker
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
             - matchExpressions:
-              - key: node-role.cosched.io/standby-worker
+              - key: node-role.cosched.io
                 operator: In
                 values:
-                - "true"
+                - standby-worker
 EOF
   echo "----------------------------------------"
   echo "istio-values.yaml"
@@ -302,16 +302,16 @@ EOF
 
 pilot:
   nodeSelector:
-    node-role.cosched.io/standby-worker: "true"
+    node-role.cosched.io: standby-worker
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
             - matchExpressions:
-              - key: node-role.cosched.io/standby-worker
+              - key: node-role.cosched.io
                 operator: In
                 values:
-                - "true"
+                - standby-worker
 
 # Add CA certificate to mesh configuration
 meshConfig:
@@ -327,16 +327,16 @@ gateways:
         cpu: "4"
         memory: "4Gi"
     nodeSelector:
-      node-role.cosched.io/standby-worker: "true"
+      node-role.cosched.io: standby-worker
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: node-role.cosched.io/standby-worker
+            - key: node-role.cosched.io
               operator: In
               values:
-              - "true"
+              - standby-worker
 EOF
 
   echo "----------------------------------------"
@@ -361,16 +361,16 @@ resources:
     cpu: "4"
     memory: "4Gi"
 nodeSelector:
-  node-role.cosched.io/standby-worker: "true"
+  node-role.cosched.io: standby-worker
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
       - matchExpressions:
-        - key: node-role.cosched.io/standby-worker
+        - key: node-role.cosched.io
           operator: In
           values:
-          - "true"
+          - standby-worker
 EOF
 
 echo "helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml"
