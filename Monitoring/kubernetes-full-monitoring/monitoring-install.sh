@@ -386,10 +386,6 @@ echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merg
 kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p "{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}"
 
 echo "----------------------------------------"
-echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p \"{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}\""
-kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p "{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}"
-
-echo "----------------------------------------"
 echo "kubectl patch hpa istiod -n istio-system -p '{\"spec\":{\"maxReplicas\": ${istio_replica_count}}}'"
 kubectl patch hpa istiod -n istio-system -p "{\"spec\":{\"maxReplicas\": ${istio_replica_count}}}"
 
