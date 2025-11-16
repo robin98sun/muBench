@@ -232,17 +232,17 @@ EOF
 
 pilot:
   nodeSelector:
-    openwhisk-role: edge
+    node-role.cosched.io/standby-worker: true
   # Or full affinity if you want stricter control
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: openwhisk-role
+          - key: node-role.cosched.io/standby-worker
             operator: In
             values:
-            - edge
+            - true
 
 # Disable TLS verification for private registry
 gateways:
@@ -253,16 +253,16 @@ gateways:
         cpu: "4"
         memory: "4Gi"
     nodeSelector:
-      openwhisk-role: edge
+      node-role.cosched.io/standby-worker: true
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: openwhisk-role
+            - key: node-role.cosched.io/standby-worker
               operator: In
               values:
-              - edge
+              - true
 EOF
   echo "----------------------------------------"
   echo "istio-values.yaml"
@@ -302,16 +302,16 @@ EOF
 
 pilot:
   nodeSelector:
-    openwhisk-role: edge
+    node-role.cosched.io/standby-worker: true
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: openwhisk-role
+          - key: node-role.cosched.io/standby-worker
             operator: In
             values:
-            - edge
+            - true
 
 # Add CA certificate to mesh configuration
 meshConfig:
@@ -327,16 +327,16 @@ gateways:
         cpu: "4"
         memory: "4Gi"
     nodeSelector:
-      openwhisk-role: edge
+      node-role.cosched.io/standby-worker: true
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: openwhisk-role
+            - key: node-role.cosched.io/standby-worker
               operator: In
               values:
-              - edge
+              - true
 EOF
 
   echo "----------------------------------------"
@@ -361,16 +361,16 @@ resources:
     cpu: "4"
     memory: "4Gi"
 nodeSelector:
-  kubernetes.io/hostname: ${head_node_name}
+  node-role.cosched.io/standby-worker: true
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
       - matchExpressions:
-        - key: kubernetes.io/hostname
+        - key: node-role.cosched.io/standby-worker
           operator: In
           values:
-          - ${head_node_name}
+          - true
 EOF
 
 echo "helm install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml"
