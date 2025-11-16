@@ -321,6 +321,8 @@ $(echo "${cert_content}" | sed 's/^/        /')
 
 gateways:
   istio-ingressgateway:
+    autoscaling:
+      enabled: false
     replicaCount: ${istio_replica_count}
     resources:
       limits:
@@ -348,14 +350,16 @@ EOF
   echo "----------------------------------------"
   echo "helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
   helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
-  if [[ $? -ne 0 ]]; then
-    echo "ERROR: Failed to install istiod"
-    exit 1
-  fi
+  # if [[ $? -ne 0 ]]; then
+  #   echo "ERROR: Failed to install istiod"
+  #   exit 1
+  # fi
 fi
 
 cat <<EOF > istio-gateway-values.yaml
 replicaCount: ${istio_replica_count}
+autoscaling:
+  enabled: false
 resources:
   limits:
     cpu: "4"
@@ -376,11 +380,40 @@ EOF
 echo "helm upgrade --install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml"
 helm upgrade --install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml
 
-echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{\"spec\":{\"progressDeadlineSeconds\":3600}}'"
-kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{"spec":{"progressDeadlineSeconds":3600}}'
+echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p \"{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}\""
+kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p "{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}"
+# Wait for the istio-ingressgateway pods to be ready according to istio_replica_count
+echo "Waiting for istio-ingressgateway pods to be ready..."
+
+ready=0
+timeout=600  # 10 minutes
+elapsed=0
+interval=10
+
+while [[ $elapsed -lt $timeout ]]; do
+  ready=$(kubectl -n istio-system get pods -l app=istio-ingressgateway -o json | \
+    jq '[.items[] | select(.status.phase=="Running") | select(.status.containerStatuses[]?.ready==true)] | length')
+
+  echo -ne "Ready istio-ingressgateway pods: $ready / $istio_replica_count\r"
+
+  if [[ "$ready" -ge "$istio_replica_count" ]]; then
+    echo ""
+    echo "All $istio_replica_count istio-ingressgateway pods are ready."
+    break
+  fi
+  sleep $interval
+  elapsed=$((elapsed + interval))
+done
+
+if [[ "$ready" -lt "$istio_replica_count" ]]; then
+  echo ""
+  echo "ERROR: Timed out waiting for $istio_replica_count istio-ingressgateway pods to be ready (got $ready)."
+  exit 1
+fi
+
 echo "----------------------------------------"
-echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{\"spec\":{\"replicas\":${istio_replica_count}}}'"
-kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p "{\"spec\":{\"replicas\":${istio_replica_count}}}"
+# echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p '{\"spec\":{\"replicas\":${istio_replica_count}}}'"
+# kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p "{\"spec\":{\"replicas\":${istio_replica_count}}}"
 echo "----------------------------------------"
 echo "kubectl label namespace ${microservice_namespace} istio-injection=enabled"
 kubectl label namespace ${microservice_namespace} istio-injection=enabled
