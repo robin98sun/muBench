@@ -326,8 +326,8 @@ gateways:
     replicaCount: ${istio_replica_count}
     resources:
       limits:
-        cpu: "4"
-        memory: "4Gi"
+        cpu: "8"
+        memory: "8Gi"
     nodeSelector:
       node-role.cosched.io: standby-worker
     affinity:
@@ -362,8 +362,8 @@ autoscaling:
   enabled: false
 resources:
   limits:
-    cpu: "4"
-    memory: "4Gi"
+    cpu: "8"
+    memory: "8Gi"
 nodeSelector:
   node-role.cosched.io: standby-worker
 affinity:
@@ -377,11 +377,26 @@ affinity:
           - standby-worker
 EOF
 
+echo "----------------------------------------"
 echo "helm upgrade --install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml"
 helm upgrade --install istio-ingressgateway istio/gateway -n istio-system -f istio-gateway-values.yaml
 
+echo "----------------------------------------"
 echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p \"{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}\""
 kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p "{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}"
+
+echo "----------------------------------------"
+echo "kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p \"{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}\""
+kubectl patch deployment istio-ingressgateway -n istio-system --type='merge' -p "{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}"
+
+echo "----------------------------------------"
+echo "kubectl patch hpa istiod -n istio-system -p '{\"spec\":{\"maxReplicas\": ${istio_replica_count}}}'"
+kubectl patch hpa istiod -n istio-system -p "{\"spec\":{\"maxReplicas\": ${istio_replica_count}}}"
+
+echo "----------------------------------------"
+echo "kubectl patch deployment istiod -n istio-system --type='merge' -p \"{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}\""
+kubectl patch deployment istiod -n istio-system --type='merge' -p "{\"spec\":{\"progressDeadlineSeconds\":3600, \"replicas\":${istio_replica_count} }}"
+echo "----------------------------------------"
 # Wait for the istio-ingressgateway pods to be ready according to istio_replica_count
 echo "Waiting for istio-ingressgateway pods to be ready..."
 
