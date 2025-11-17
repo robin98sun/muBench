@@ -9,7 +9,7 @@ data:
     worker_processes  16;
     error_log  /etc/nginx/error.log;
     events {
-      worker_connections  102400;
+      worker_connections  1024000;
     }
     http {
         # Define a map to generate timestamp at request start
