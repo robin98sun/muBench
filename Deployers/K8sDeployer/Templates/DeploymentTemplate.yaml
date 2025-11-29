@@ -27,9 +27,9 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
         qos-group: {{QOS_GROUP}}
-        sidecar.istio.io/proxyMemory: "512Mi"        # memory request
+        sidecar.istio.io/proxyMemory: "32Mi"        # memory request
         sidecar.istio.io/proxyMemoryLimit: "6Gi"    # memory limit
-        sidecar.istio.io/proxyCPU: "500m"            # cpu request
+        sidecar.istio.io/proxyCPU: "50m"            # cpu request
         sidecar.istio.io/proxyCPULimit: "10000m"     # cpu limit
         sidecar.istio.io/userVolume: |
           [
