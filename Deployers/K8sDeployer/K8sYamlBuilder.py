@@ -83,6 +83,11 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             else:
                 f = f.replace("{{SCHEDULER_IN_COSCHED}}", "none")
             
+            if "envoy-concurrency" in k8s_parameters.keys():
+                f = f.replace("{{ENVOY_CONCURRENCY}}", str(k8s_parameters["envoy-concurrency"]))
+            else:
+                f = f.replace("{{ENVOY_CONCURRENCY}}", "2")
+            
             if "worker-node-affinity" in k8s_parameters.keys():
                 NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
                 # Ensure values is always a list
