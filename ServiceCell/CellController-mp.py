@@ -33,21 +33,21 @@ cosched_headers_list = [
 ]
 # Configuration of global variables
 
-jaeger_headers_list = [
-    'x-request-id',
-    'x-b3-traceid',
-    'x-b3-spanid',
-    'x-b3-parentspanid',
-    'x-b3-sampled',
-    'x-b3-flags',
-    'x-datadog-trace-id',
-    'x-datadog-parent-id',
-    'x-datadog-sampling-priority',
-    'x-ot-span-context',
-    'grpc-trace-bin',
-    'traceparent',
-    'x-cloud-trace-context',
-]
+# jaeger_headers_list = [
+#     'x-request-id',
+#     'x-b3-traceid',
+#     'x-b3-spanid',
+#     'x-b3-parentspanid',
+#     'x-b3-sampled',
+#     'x-b3-flags',
+#     'x-datadog-trace-id',
+#     'x-datadog-parent-id',
+#     'x-datadog-sampling-priority',
+#     'x-ot-span-context',
+#     'grpc-trace-bin',
+#     'traceparent',
+#     'x-cloud-trace-context',
+# ]
 
 def get_cosched_headers(headers):
     cosched_headers = dict()
@@ -192,12 +192,12 @@ def start_worker():
                     if "internal_services" in my_work_model['alternative_behaviors'][behaviour_id].keys():
                         my_internal_service = my_work_model['alternative_behaviors'][behaviour_id]['internal_service']
 
-        # trace context propagation
+        # # trace context propagation
         jaeger_headers = dict()
-        for jhdr in jaeger_headers_list:
-            val = request.headers.get(jhdr)
-            if val is not None:
-                jaeger_headers[jhdr] = val
+        # for jhdr in jaeger_headers_list:
+        #     val = request.headers.get(jhdr)
+        #     if val is not None:
+        #         jaeger_headers[jhdr] = val
 
 
 

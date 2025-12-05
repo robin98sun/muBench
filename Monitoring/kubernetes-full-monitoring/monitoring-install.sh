@@ -250,8 +250,8 @@ gateways:
     replicaCount: ${istio_replica_count}
     resources:
       limits:
-        cpu: "4"
-        memory: "4Gi"
+        cpu: "8"
+        memory: "8Gi"
     nodeSelector:
       node-role.cosched.io: standby-worker
     affinity:
@@ -348,8 +348,9 @@ EOF
   echo "helm upgrade --install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml"
   helm upgrade --install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml
   echo "----------------------------------------"
-  echo "helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
-  helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
+  # echo "helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
+  # helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
+  helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="" --wait -f istio-values-with-cert.yaml
   # if [[ $? -ne 0 ]]; then
   #   echo "ERROR: Failed to install istiod"
   #   exit 1
@@ -433,44 +434,44 @@ echo "----------------------------------------"
 echo "kubectl label namespace ${microservice_namespace} istio-injection=enabled"
 kubectl label namespace ${microservice_namespace} istio-injection=enabled
 
-# Istio - Prometeus integration
-echo "kubectl apply -f istio-prometheus-operator.yaml"
-kubectl apply -f istio-prometheus-operator.yaml
+# # Istio - Prometeus integration
+# echo "kubectl apply -f istio-prometheus-operator.yaml"
+# kubectl apply -f istio-prometheus-operator.yaml
 
 # #########################################################################################################################
 # Jaeger
 # #########################################################################################################################
-echo "sed -i 's/<node-name>/${head_node_name}/g' jaeger.yaml"
-sed -i "s/robin-llm-openwhisk-head/${head_node_name}/g" jaeger.yaml
-echo "kubectl apply -f jaeger.yaml"
-kubectl apply -f jaeger.yaml
+# echo "sed -i 's/<node-name>/${head_node_name}/g' jaeger.yaml"
+# sed -i "s/robin-llm-openwhisk-head/${head_node_name}/g" jaeger.yaml
+# echo "kubectl apply -f jaeger.yaml"
+# kubectl apply -f jaeger.yaml
 
-# Jaeger NodePort Service (30002)
-echo "kubectl apply -f jaeger-nodeport.yaml"
-kubectl apply -f jaeger-nodeport.yaml
+# # Jaeger NodePort Service (30002)
+# echo "kubectl apply -f jaeger-nodeport.yaml"
+# kubectl apply -f jaeger-nodeport.yaml
 
 # #########################################################################################################################
 # Kiali
 # #########################################################################################################################
-helm repo add kiali https://kiali.org/helm-charts
-helm repo update
+# helm repo add kiali https://kiali.org/helm-charts
+# helm repo update
 
-cat <<EOF > kiali-scheduling.yaml
-deployment:
-  node_selector:
-    kubernetes.io/hostname: ${head_node_name}
-EOF
+# cat <<EOF > kiali-scheduling.yaml
+# deployment:
+#   node_selector:
+#     kubernetes.io/hostname: ${head_node_name}
+# EOF
 
-echo "helm upgrade --install -n istio-system -f kiali-values.yaml -f kiali-scheduling.yaml kiali-server kiali/kiali-server"
-helm upgrade --install \
-  -n istio-system \
-  -f kiali-values.yaml \
-  -f kiali-scheduling.yaml \
-  kiali-server \
-  kiali/kiali-server
-#Kiali NodePort Service (30003)
-echo "kubectl apply -f kiali-nodeport.yaml"
-kubectl apply -f kiali-nodeport.yaml
+# echo "helm upgrade --install -n istio-system -f kiali-values.yaml -f kiali-scheduling.yaml kiali-server kiali/kiali-server"
+# helm upgrade --install \
+#   -n istio-system \
+#   -f kiali-values.yaml \
+#   -f kiali-scheduling.yaml \
+#   kiali-server \
+#   kiali/kiali-server
+# #Kiali NodePort Service (30003)
+# echo "kubectl apply -f kiali-nodeport.yaml"
+# kubectl apply -f kiali-nodeport.yaml
 
 # #########################################################################################################################
 echo "Monitoring installation completed"
@@ -478,8 +479,8 @@ echo "Grafana admin user: admin"
 echo "Grafana admin password: $(kubectl --namespace monitoring get secrets prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 -d)"
 echo "Prometheus URL: http://${master_ip}:30000"
 echo "Grafana URL: http://${master_ip}:30001"
-echo "Jaeger URL: http://${master_ip}:30002"
-echo "Kiali URL: http://${master_ip}:30003"
+# echo "Jaeger URL: http://${master_ip}:30002"
+# echo "Kiali URL: http://${master_ip}:30003"
 echo "Nginx API Gateway URL: http://${master_ip}:31113"
 echo "----------------------------------------"
 

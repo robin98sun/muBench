@@ -30,7 +30,7 @@ spec:
         sidecar.istio.io/proxyMemory: "32Mi"        # memory request
         sidecar.istio.io/proxyMemoryLimit: "6Gi"    # memory limit
         sidecar.istio.io/proxyCPU: "50m"            # cpu request
-        sidecar.istio.io/proxyCPULimit: "10000m"     # cpu limit
+        sidecar.istio.io/proxyCPULimit: "20000m"     # cpu limit
         sidecar.istio.io/userVolume: |
           [
             {"name":"schedsock", "hostPath": {"path":"/var/run/node-scheduler", "type": "DirectoryOrCreate"}},
