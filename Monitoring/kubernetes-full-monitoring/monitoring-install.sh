@@ -9,6 +9,7 @@ docker_registry_cert=""
 node_label_key="" 
 node_label_value=""
 istio_replica_count=1
+istio_proxy_tracer=""
 while [[ $# -gt 0 ]]; do
     case $1 in
         --ns=*)
@@ -47,6 +48,10 @@ while [[ $# -gt 0 ]]; do
             istio_replica_count="${1#*=}"
             shift
             ;;
+        --istio-proxy-tracer=*)
+            istio_proxy_tracer="${1#*=}"
+            shift
+            ;;
         *)
             shift
             ;;
@@ -62,6 +67,7 @@ echo "  --master-ip=<ip>                   Master IP address (default: master_ip
 echo "  --docker-registry=<registry>      Docker registry server (default: 44.251.28.34:30500)"
 echo "  --skip-registry-auth               Skip creating registry authentication secret"
 echo "  --docker-registry-cert=<cert>      Docker registry certificate (default: empty)"
+echo "  --istio-proxy-tracer=<name>       Istio proxy tracer backend (empty to disable)"
 echo ""
 echo "Current configuration:"
 echo "  Microservice namespace: ${microservice_namespace}"
@@ -70,7 +76,24 @@ echo "  Master IP: ${master_ip}"
 echo "  Docker registry: ${docker_registry_server}"
 echo "  Skip registry auth: ${skip_registry_auth}"
 echo "  Docker registry certificate: ${docker_registry_cert}"
+echo "  Istio proxy tracer: ${istio_proxy_tracer:-disabled}"
 echo ""
+
+install_istiod() {
+  local values_file="$1"
+  local tracer_args=()
+  local tracer_echo=""
+
+  if [[ -n "${istio_proxy_tracer}" ]]; then
+    tracer_args=(--set "global.proxy.tracer=${istio_proxy_tracer}")
+    tracer_echo=" --set global.proxy.tracer=${istio_proxy_tracer}"
+  else
+    echo "Istio proxy tracer disabled; skipping --set global.proxy.tracer flag."
+  fi
+
+  echo "helm upgrade --install istiod istio/istiod -n istio-system${tracer_echo} --wait -f ${values_file}"
+  helm upgrade --install istiod istio/istiod -n istio-system "${tracer_args[@]}" --wait -f "${values_file}"
+}
 
 
 
@@ -271,9 +294,8 @@ EOF
   echo "helm upgrade --install istio-base istio/base -n istio-system -f istio-values.yaml"
   helm upgrade --install istio-base istio/base -n istio-system -f istio-values.yaml
   echo "----------------------------------------"
-  echo "helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml"
+  install_istiod "istio-values.yaml"
   echo "----------------------------------------"
-  helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values.yaml
 
 else
 
@@ -348,9 +370,7 @@ EOF
   echo "helm upgrade --install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml"
   helm upgrade --install istio-base istio/base -n istio-system -f istio-values-with-cert.yaml
   echo "----------------------------------------"
-  # echo "helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml"
-  # helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="zipkin" --wait -f istio-values-with-cert.yaml
-  helm upgrade --install istiod istio/istiod -n istio-system --set global.proxy.tracer="" --wait -f istio-values-with-cert.yaml
+  install_istiod "istio-values-with-cert.yaml"
   # if [[ $? -ne 0 ]]; then
   #   echo "ERROR: Failed to install istiod"
   #   exit 1
