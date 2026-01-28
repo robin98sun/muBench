@@ -10,6 +10,7 @@ node_label_key=""
 node_label_value=""
 istio_replica_count=1
 istio_proxy_tracer=""
+istio_tag=""
 while [[ $# -gt 0 ]]; do
     case $1 in
         --ns=*)
@@ -26,6 +27,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --docker-registry=*)
             docker_registry_server="${1#*=}"
+            shift
+            ;;
+        --istio-tag=*)
+            istio_tag="${1#*=}"
             shift
             ;;
         --skip-registry-auth)
@@ -243,6 +248,11 @@ global:
   hub: ${docker_registry_server}
   imagePullPolicy: IfNotPresent
 EOF
+if [ -n "${istio_tag}" ]; then
+  cat <<EOF >> istio-values.yaml
+  tag: ${istio_tag}
+EOF
+fi
 # Only add imagePullSecrets if authentication is not skipped
   if [ "$skip_registry_auth" = false ]; then
     cat <<EOF >> istio-values.yaml
@@ -311,7 +321,11 @@ global:
   hub: ${docker_registry_server}
   imagePullPolicy: IfNotPresent
 EOF
-
+if [ -n "${istio_tag}" ]; then
+  cat <<EOF >> istio-values-with-cert.yaml
+  tag: ${istio_tag}
+EOF
+fi
   # Only add imagePullSecrets if authentication is not skipped
   if [ "$skip_registry_auth" = false ]; then
     cat <<EOF >> istio-values-with-cert.yaml

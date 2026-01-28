@@ -30,6 +30,7 @@ cosched_headers_list = [
     'cosched-budget',
     'cosched-caller',
     'cosched-trace-id',
+    'cosched-app-id',
 ]
 # Configuration of global variables
 
