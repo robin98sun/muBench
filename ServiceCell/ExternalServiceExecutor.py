@@ -204,6 +204,7 @@ def run_external_service_ms_trace(external_services, work_model, query_string, t
     for service_series in external_services:
         copy_extra_headers = extra_headers.copy()
         copy_extra_headers["cosched-task-index"] = id
+        app.logger.debug(f'sending external service request for query {extra_headers["cosched-query-id"]} which fanout is {fanout} and task index is {id}')
         futures.append(pool.submit(request_external_service_ms_trace, service_series, id, work_model, s, trace, query_string, app, trace_context, copy_extra_headers))
         id = id + 1
     wait(futures)
