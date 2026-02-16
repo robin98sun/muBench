@@ -199,8 +199,12 @@ def run_external_service_ms_trace(external_services, work_model, query_string, t
     pool = ThreadPoolExecutor(number_of_groups)
     futures = list()
     id = 0
+    fanout = len(external_services)
+    extra_headers["cosched-fanout"] = fanout
     for service_series in external_services:
-        futures.append(pool.submit(request_external_service_ms_trace, service_series, id, work_model, s, trace, query_string, app, trace_context, extra_headers))
+        copy_extra_headers = extra_headers.copy()
+        copy_extra_headers["cosched-task-index"] = id
+        futures.append(pool.submit(request_external_service_ms_trace, service_series, id, work_model, s, trace, query_string, app, trace_context, copy_extra_headers))
         id = id + 1
     wait(futures)
     for x in as_completed(futures):

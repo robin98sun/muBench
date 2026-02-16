@@ -31,6 +31,9 @@ cosched_headers_list = [
     'cosched-caller',
     'cosched-trace-id',
     'cosched-app-id',
+    'cosched-query-id',
+    'cosched-fanout',
+    'cosched-task-index',
 ]
 # Configuration of global variables
 
@@ -343,7 +346,9 @@ def start_worker():
             if "external_services" in trace.keys() and trace["external_services"] is not None and len(trace["external_services"])>0:
                 my_service_graph = trace["external_services"]
                 extra_headers = get_cosched_headers(request.headers)
+                trace_id = extra_headers.get("cosched-trace-id", "")
                 extra_headers["cosched-caller"] = ID
+                extra_headers["cosched-query-id"] = f"{trace_id}::{ID}::{int(time.time()*1_000_000)}"
                 app.logger.debug(f'sending external service request with extra headers: {extra_headers}')
                 service_error_dict, service_response_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers, request_headers=extra_headers)
                 body = f"{body}||{(time.time()-start_request_processing)*1000}||{'!'.join(list(service_response_dict.values()) + [str(e) for e in list(service_error_dict.values())])}"
