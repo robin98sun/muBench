@@ -11,6 +11,20 @@ NODE_AFFINITY_TEMPLATE = {'affinity': {'nodeAffinity': {'requiredDuringSchedulin
 POD_ANTIAFFINITI_TEMPLATE = {'affinity':{'podAntiAffinity':{'requiredDuringSchedulingIgnoredDuringExecution':[{'labelSelector':{'matchExpressions':[{'key':'app','operator':'In','values':['']}]},'topologyKey':'kubernetes.io/hostname'}]}}}
 
 
+def _normalize_bool_string(value, default_value=False):
+    if value is None:
+        value = default_value
+    if isinstance(value, bool):
+        return "true" if value else "false"
+
+    normalized_value = str(value).strip().lower()
+    if normalized_value in {"1", "true", "yes", "on"}:
+        return "true"
+    if normalized_value in {"0", "false", "no", "off"}:
+        return "false"
+    return "true" if default_value else "false"
+
+
 # Override work_model params with those in k8s_parameters
 def customization_work_model(workmodel, k8s_parameters):
     for service in workmodel:
@@ -130,6 +144,12 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 f = f.replace("{{LOGGER_LEVEL}}", f'\'{workmodel[service]["logger_level"]}\'')
             else:
                 f = f.replace("{{LOGGER_LEVEL}}", "\'ERROR\'")
+
+            f = f.replace("{{SERVICE_POOL_CONNECTIONS}}", f'\'{k8s_parameters.get("service-pool-connections", 128)}\'')
+            f = f.replace("{{SERVICE_POOL_MAXSIZE}}", f'\'{k8s_parameters.get("service-pool-maxsize", 16)}\'')
+            service_pool_block = _normalize_bool_string(k8s_parameters.get("service-pool-block"), False)
+            f = f.replace("{{SERVICE_POOL_BLOCK}}", f'\'{service_pool_block}\'')
+            f = f.replace("{{DNS_NDOTS}}", f'\'{k8s_parameters.get("dns-ndots", 1)}\'')
             
             rank_string='' # ranck string is used to order the yaml file as a funciont of the cpu-requests 
             if  len(set(workmodel[service].keys()).intersection({"cpu-limits","memory-limits","cpu-requests","memory-requests"})):

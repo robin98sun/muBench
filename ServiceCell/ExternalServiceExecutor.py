@@ -1,17 +1,103 @@
+import os
 import random
 from readline import append_history_file
 import requests
 from concurrent.futures import ThreadPoolExecutor, wait, as_completed, FIRST_COMPLETED
 import time
+import threading
 import grpc
 import mub_pb2_grpc as pb2_grpc
 import mub_pb2 as pb2
 import json
 from pprint import pprint
+from requests.adapters import HTTPAdapter
 
 
 service_stub = dict()
-s = requests.Session()
+s = None
+_rest_session = None
+_rest_session_pid = None
+_rest_session_lock = threading.Lock()
+
+
+def _clamp(value, lower_bound, upper_bound):
+    return max(lower_bound, min(upper_bound, value))
+
+
+def _parse_positive_int(raw_value, default_value):
+    try:
+        parsed_value = int(raw_value)
+        if parsed_value > 0:
+            return parsed_value
+    except (TypeError, ValueError):
+        pass
+    return default_value
+
+
+def _parse_bool(raw_value, default_value):
+    if raw_value is None:
+        return default_value
+
+    normalized_value = str(raw_value).strip().lower()
+    if normalized_value in {"1", "true", "yes", "on"}:
+        return True
+    if normalized_value in {"0", "false", "no", "off"}:
+        return False
+    return default_value
+
+
+def _unique_downstream_host_count(work_model):
+    unique_hosts = set()
+    for service_config in work_model.values():
+        if isinstance(service_config, dict):
+            host = service_config.get("url")
+            if host:
+                unique_hosts.add(host)
+    return len(unique_hosts)
+
+
+def _build_rest_session(work_model, app):
+    unique_hosts = _unique_downstream_host_count(work_model)
+    default_pool_connections = _clamp(unique_hosts, 32, 256)
+    pool_connections = _parse_positive_int(
+        os.getenv("SERVICE_POOL_CONNECTIONS"),
+        default_pool_connections,
+    )
+    pool_maxsize = _parse_positive_int(os.getenv("SERVICE_POOL_MAXSIZE"), 16)
+    pool_block = _parse_bool(os.getenv("SERVICE_POOL_BLOCK"), False)
+
+    session = requests.Session()
+    adapter = HTTPAdapter(
+        pool_connections=pool_connections,
+        pool_maxsize=pool_maxsize,
+        max_retries=0,
+        pool_block=pool_block,
+    )
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    app.logger.info(
+        "Configured REST session for pid %s with unique_hosts=%d, pool_connections=%d, pool_maxsize=%d, pool_block=%s",
+        os.getpid(),
+        unique_hosts,
+        pool_connections,
+        pool_maxsize,
+        pool_block,
+    )
+    return session
+
+
+def _get_rest_session(work_model, app):
+    global _rest_session, _rest_session_pid
+    current_pid = os.getpid()
+    if _rest_session is not None and _rest_session_pid == current_pid:
+        return _rest_session
+
+    with _rest_session_lock:
+        if _rest_session is None or _rest_session_pid != current_pid:
+            _rest_session = _build_rest_session(work_model, app)
+            _rest_session_pid = current_pid
+    return _rest_session
 
 def init_REST(app):
     app.logger.info("Init REST function")
@@ -35,6 +121,7 @@ def init_gRPC(my_service_graph, workmodel, server_port, app):
 def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context, ms_trace_input=None, request_headers=None):
     try:
         service_no_escape = service.split("__")[0]
+        session = _get_rest_session(work_model, app)
         if ms_trace_input:
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             headers.update(jaeger_context)
@@ -43,11 +130,11 @@ def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context
                     headers[key] = value
             json_payload = json.dumps(ms_trace_input)
             app.logger.debug(f'Requesting external service via REST: {service}, headers: {headers}')
-            return s.post(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}',data=json_payload,headers=headers)
+            return session.post(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}',data=json_payload,headers=headers)
 
         elif len(trace)==0 and len(query_string)==0:
             # default 
-            return s.get(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}', headers=jaeger_context)
+            return session.get(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}', headers=jaeger_context)
         elif len(trace)>0:
             # trace-driven request
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
@@ -56,12 +143,12 @@ def request_REST(service,id,work_model,s,trace,query_string, app, jaeger_context
             json_dict[service] = trace[id][service]
             json_payload = json.dumps(json_dict)
             if  len(query_string)==0:
-                return s.post(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}',data=json_payload,headers=headers)
+                return session.post(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}',data=json_payload,headers=headers)
             else:
-                return s.post(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}?{query_string}',data=json_payload,headers=headers)
+                return session.post(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}?{query_string}',data=json_payload,headers=headers)
         elif  len(query_string)>0:
             # request with enclosed behaviour information
-            return s.get(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}?{query_string}', headers=jaeger_context)  
+            return session.get(f'http://{work_model[service_no_escape]["url"]}{work_model[service_no_escape]["path"]}?{query_string}', headers=jaeger_context)  
         else:
             r = requests.Response()
             r.status_code = 505
@@ -214,4 +301,3 @@ def run_external_service_ms_trace(external_services, work_model, query_string, t
         service_response_dict.update(x.result()[2])
     app.logger.info("--------> Threads Done!")
     return service_error_dict, service_response_dict
-

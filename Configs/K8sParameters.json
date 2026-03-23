@@ -25,6 +25,10 @@
       "ms-replica": 1,
       "cosched-scheduler-name": "query-scheduler",
       "envoy-concurrency": 2,
+      "service-pool-connections": 128,
+      "service-pool-maxsize": 16,
+      "service-pool-block": "false",
+      "dns-ndots": 1,
       "host-files": [
         {
             "name": "cpu-profiling-result", 
