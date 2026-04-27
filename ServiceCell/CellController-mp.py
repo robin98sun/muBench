@@ -34,6 +34,7 @@ cosched_headers_list = [
     'cosched-query-id',
     'cosched-fanout',
     'cosched-task-index',
+    'cosched-query-callee-set',
 ]
 # Configuration of global variables
 
