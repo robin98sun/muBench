@@ -288,13 +288,17 @@ def run_external_service_ms_trace(external_services, work_model, query_string, t
     id = 0
     fanout = len(external_services)
     extra_headers["cosched-fanout"] = f"{fanout}"
-    fanout_callee_set = set()
+    # Ordered list (one entry per parallel branch), NOT a set: a set deduplicates
+    # branches that call the same service, making len(callee-set) < cosched-fanout and
+    # undercounting k in the WASM tail predictor (evk_from_pod_list). Keep duplicates so
+    # the non-blocking path's k matches the true fanout.
+    fanout_callee_list = []
     for service_series in external_services:
         for service in service_series:
-            fanout_callee_set.add(service["name"])
+            fanout_callee_list.append(service["name"])
             # only the first service is counted as callee for fanout, since they are called in sequence in the same service series, and the downstream services in the same series will not cause extra fanout
             break
-    extra_headers["cosched-query-callee-set"] = f"{','.join(fanout_callee_set)}"
+    extra_headers["cosched-query-callee-set"] = f"{','.join(fanout_callee_list)}"
     for service_series in external_services:
         copy_extra_headers = extra_headers.copy()
         copy_extra_headers["cosched-task-index"] = f"{id}"
