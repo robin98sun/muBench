@@ -102,6 +102,19 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             else:
                 f = f.replace("{{ENVOY_CONCURRENCY}}", "2")
             
+            # Macaw sub-scheduler knobs. Defaults match the module's own
+            # defaults, so a testbed that says nothing about macaw gets a
+            # template identical in effect to one without these annotations.
+            if "macaw-queue-policy" in k8s_parameters.keys():
+                f = f.replace("{{MACAW_QUEUE_POLICY}}", str(k8s_parameters["macaw-queue-policy"]))
+            else:
+                f = f.replace("{{MACAW_QUEUE_POLICY}}", "edf")
+
+            if "macaw-safety-tick-ms" in k8s_parameters.keys():
+                f = f.replace("{{MACAW_SAFETY_TICK_MS}}", str(k8s_parameters["macaw-safety-tick-ms"]))
+            else:
+                f = f.replace("{{MACAW_SAFETY_TICK_MS}}", "20")
+
             if "worker-node-affinity" in k8s_parameters.keys():
                 NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
                 # Ensure values is always a list

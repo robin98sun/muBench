@@ -37,7 +37,9 @@ spec:
             { "name":"registry-ca",
               "secret":{ "secretName":"registry-ca" }
             },
-            {"name":"cosched-wasm","configMap":{"name":"cosched-wasm"}}
+            {"name":"cosched-wasm","configMap":{"name":"cosched-wasm"}},
+            {"name":"macaw-module","hostPath":{"path":"/opt/macaw","type":"DirectoryOrCreate"}},
+            {"name":"macaw-sock","hostPath":{"path":"/var/run/macaw","type":"DirectoryOrCreate"}}
           ]
         sidecar.istio.io/userVolumeMount: |
           [
@@ -46,10 +48,23 @@ spec:
               "mountPath":"/etc/registry-ca",
               "readonly": true
             },
-            {"name":"cosched-wasm","mountPath":"/etc/istio/wasm","readonly":true}
+            {"name":"cosched-wasm","mountPath":"/etc/istio/wasm","readonly":true},
+            {"name":"macaw-module","mountPath":"/etc/macaw","readonly":true},
+            {"name":"macaw-sock","mountPath":"/var/run/macaw","readonly":false}
           ]
+        # The two macaw-* volumes and the MACAW_/ENVOY_DYNAMIC_MODULES_ metadata
+        # are INERT unless the macaw EnvoyFilter is also applied. Both host paths
+        # are DirectoryOrCreate, so a pod starts whether or not the node agent
+        # has run; the env vars name a module nobody loads. They are therefore
+        # safe to carry on every cluster, including AWS, which is why they live
+        # here rather than in a CloudLab-only fork of this template.
         proxy.istio.io/config: |
-          {"proxyMetadata":{"SSL_CERT_DIR":"/etc/ssl/certs:/etc/registry-ca"}, "concurrency":{{ENVOY_CONCURRENCY}}}
+          {"proxyMetadata":{"SSL_CERT_DIR":"/etc/ssl/certs:/etc/registry-ca",
+                            "ENVOY_DYNAMIC_MODULES_SEARCH_PATH":"/etc/macaw",
+                            "MACAW_BOOTSTRAP_SOCKET":"/var/run/macaw/bootstrap.sock",
+                            "MACAW_QUEUE_POLICY":"{{MACAW_QUEUE_POLICY}}",
+                            "MACAW_SAFETY_TICK_MS":"{{MACAW_SAFETY_TICK_MS}}"},
+           "concurrency":{{ENVOY_CONCURRENCY}}}
     spec:
       terminationGracePeriodSeconds : 3
       schedulerName: {{SCHEDULER_NAME}}
