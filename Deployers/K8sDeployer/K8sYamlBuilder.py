@@ -127,6 +127,32 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             else:
                 f = f.replace("{{COSCHED_CONCURRENCY}}", "1")
 
+            # Whether a RESUMED request counts toward deadline pressure
+            # (request_scheduler.rs:110): under enforcing-deadline every resume
+            # does, under no-later-than-deadline only one accepted while its
+            # class was overloaded. The sidecar had no way to know which, so the
+            # urgent-on-release half of the pressure was decided by a compiled
+            # default.
+            #
+            # NOTE the plans' top-level `cosched-scheduling-algorithm` is
+            # no-later-than-deadline and the Macaw run segment overrides it to
+            # enforcing-deadline. Reading the top-level line and calling it
+            # "what the plan sets" is how the default came to be wrong; taking
+            # it from the resolved parameter is what makes that impossible.
+            if "cosched-scheduling-algorithm" in k8s_parameters.keys():
+                f = f.replace("{{COSCHED_SCHEDULING_ALGORITHM}}",
+                              str(k8s_parameters["cosched-scheduling-algorithm"]))
+            else:
+                f = f.replace("{{COSCHED_SCHEDULING_ALGORITHM}}", "no-later-than-deadline")
+
+            # The REFERENCE's tick, which sets its admission rate: one resume
+            # per worker per tick. The sidecar's own timer is
+            # macaw-safety-tick-ms; this is the rate it must reproduce.
+            if "tick-period-ms" in k8s_parameters.keys():
+                f = f.replace("{{TICK_PERIOD_MS}}", str(k8s_parameters["tick-period-ms"]))
+            else:
+                f = f.replace("{{TICK_PERIOD_MS}}", "1")
+
             if "worker-node-affinity" in k8s_parameters.keys():
                 NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
                 # Ensure values is always a list
