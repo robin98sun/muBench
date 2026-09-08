@@ -115,6 +115,18 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             else:
                 f = f.replace("{{MACAW_SAFETY_TICK_MS}}", "20")
 
+            # COSCHED's UDS listener count, not Envoy's worker count (R38 N7).
+            # The sidecar rotates its sync-stat callout over
+            # cosched-query-scheduler-uds<i>, and those clusters exist for
+            # i < cosched-concurrency. Rotating over envoy-concurrency instead
+            # (16 on a d430 with `envoy-concurrency: 0`) named a cluster that
+            # does not exist in 14 of every 16 rounds. Defaults to 1 because
+            # uds0 is the only one guaranteed to be there.
+            if "cosched-concurrency" in k8s_parameters.keys():
+                f = f.replace("{{COSCHED_CONCURRENCY}}", str(k8s_parameters["cosched-concurrency"]))
+            else:
+                f = f.replace("{{COSCHED_CONCURRENCY}}", "1")
+
             if "worker-node-affinity" in k8s_parameters.keys():
                 NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
                 # Ensure values is always a list

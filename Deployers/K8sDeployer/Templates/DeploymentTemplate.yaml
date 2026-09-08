@@ -62,8 +62,10 @@ spec:
           {"proxyMetadata":{"SSL_CERT_DIR":"/etc/ssl/certs:/etc/registry-ca",
                             "ENVOY_DYNAMIC_MODULES_SEARCH_PATH":"/etc/macaw",
                             "MACAW_BOOTSTRAP_SOCKET":"/var/run/macaw/bootstrap.sock",
+                            "MACAW_ALPHA_BETA_TABLE":"/etc/macaw/alpha-beta-table.bin",
                             "MACAW_QUEUE_POLICY":"{{MACAW_QUEUE_POLICY}}",
-                            "MACAW_SAFETY_TICK_MS":"{{MACAW_SAFETY_TICK_MS}}"},
+                            "MACAW_SAFETY_TICK_MS":"{{MACAW_SAFETY_TICK_MS}}",
+                            "MACAW_COSCHED_CONCURRENCY":"{{COSCHED_CONCURRENCY}}"},
            "concurrency":{{ENVOY_CONCURRENCY}}}
     spec:
       terminationGracePeriodSeconds : 3
