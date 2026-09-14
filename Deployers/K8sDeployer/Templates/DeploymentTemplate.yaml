@@ -67,7 +67,8 @@ spec:
                             "MACAW_SAFETY_TICK_MS":"{{MACAW_SAFETY_TICK_MS}}",
                             "MACAW_COSCHED_CONCURRENCY":"{{COSCHED_CONCURRENCY}}",
                             "MACAW_SCHEDULING_ALGORITHM":"{{COSCHED_SCHEDULING_ALGORITHM}}",
-                            "MACAW_TICK_PERIOD_MS":"{{TICK_PERIOD_MS}}"},
+                            "MACAW_TICK_PERIOD_MS":"{{TICK_PERIOD_MS}}",
+                            "MACAW_SYNC_STAT_PERIOD_MS":"{{MACAW_SYNC_STAT_PERIOD_MS}}"},
            "concurrency":{{ENVOY_CONCURRENCY}}}
     spec:
       terminationGracePeriodSeconds : 3

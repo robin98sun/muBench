@@ -115,6 +115,19 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             else:
                 f = f.replace("{{MACAW_SAFETY_TICK_MS}}", "20")
 
+            # THE SYNC-STAT PERIOD IS ALSO THE DEADLINE HORIZON. The sidecar
+            # computes it as sync_stat_period_ms x deadline_lookahead_sync_intervals
+            # (macaw_filter.c:1543-1547), and that horizon is what answers "is an
+            # LS deadline approaching?" for the enforcing-deadline veto. Until now
+            # NOTHING could vary it: it was the module's compiled 100 ms default,
+            # so the horizon was a constant that no plan could calibrate against
+            # its own decision interval. Default stays 100 so an unset plan is
+            # byte-identical in effect.
+            if "macaw-sync-stat-period-ms" in k8s_parameters.keys():
+                f = f.replace("{{MACAW_SYNC_STAT_PERIOD_MS}}", str(k8s_parameters["macaw-sync-stat-period-ms"]))
+            else:
+                f = f.replace("{{MACAW_SYNC_STAT_PERIOD_MS}}", "100")
+
             # COSCHED's UDS listener count, not Envoy's worker count (R38 N7).
             # The sidecar rotates its sync-stat callout over
             # cosched-query-scheduler-uds<i>, and those clusters exist for
