@@ -52,7 +52,17 @@ data:
                     
                     # Set forward timestamp header
                     add_header X-Nginx-Forward-Time $nginx_forward_timestamp always;
-                    
+
+                    # The RETURN leg (co-scheduling request-path stamps, 2026-09-25).
+                    # Unlike the two above, which `set` fixes in the rewrite phase,
+                    # $msec written straight into add_header is evaluated when the
+                    # response header goes out -- after the upstream answered. The
+                    # upstream_* are nginx's own durations on one clock: connecting
+                    # to the entry pod, and connecting until its response header.
+                    add_header X-Nginx-Response-Time $msec always;
+                    add_header X-Nginx-Upstream-Connect-Time $upstream_connect_time always;
+                    add_header X-Nginx-Upstream-Header-Time $upstream_header_time always;
+
                     proxy_pass http:/$request_uri.{{NAMESPACE}}.svc.cluster.local{{PATH}};
                     proxy_http_version 1.1;
                     

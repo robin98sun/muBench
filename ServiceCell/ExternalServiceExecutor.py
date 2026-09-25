@@ -238,7 +238,32 @@ def run_external_service(services_group, work_model, query_string, trace, app, t
 
 
 # for MS TRACE, the service_series is a list of services to be called in sequence
-def request_external_service_ms_trace(service_series, id, work_model, s, trace, query_string, app, trace_context, extra_headers=None):
+# PER-REQUEST PATH STAMPS (co-scheduling, 2026-09-25). One record per downstream
+# call, wall-clock microseconds, so the caller's time outside its own handler can
+# be divided into segments: its sidecar out, the network, the callee's sidecar
+# (arrival -> Macaw release), the callee's handler, and back. The x-macaw-*
+# values are written by the Macaw Envoy module on the RESPONSE -- the callee's
+# inbound sidecar (in-*) and this pod's outbound sidecar (out-*) -- and the
+# x-mub-handler-* by the callee's own handler. Fields, in order:
+#   callee, task index, sent, received (this process, around the HTTP call),
+#   callee handler start, callee handler end,
+#   callee sidecar arrival, release, response,
+#   caller sidecar request, response
+# An absent stamp is an empty field, never 0 or a guess.
+CALL_STAMP_HEADERS = ('x-mub-handler-start-us', 'x-mub-handler-end-us',
+                      'x-macaw-in-arrival-us', 'x-macaw-in-release-us', 'x-macaw-in-response-us',
+                      'x-macaw-out-request-us', 'x-macaw-out-response-us')
+
+
+def _call_stamp_record(service_name, task_index, sent_us, received_us, headers):
+    fields = [service_name, str(task_index), str(sent_us), str(received_us)]
+    for h in CALL_STAMP_HEADERS:
+        v = headers.get(h) if headers is not None else None
+        fields.append(v if (v is not None and v.isdigit()) else '')
+    return ','.join(fields)
+
+
+def request_external_service_ms_trace(service_series, id, work_model, s, trace, query_string, app, trace_context, extra_headers=None, call_log=None):
     app.logger.info("**** Start SERVICES in thread: %s (via MS TRACE)" % str([service["name"] for service in service_series]))
     start_time = time.time()
     service_error_dict = dict()
@@ -251,7 +276,13 @@ def request_external_service_ms_trace(service_series, id, work_model, s, trace, 
         service_input = service["input"]
         service_input["trace_type"] = "ms-trace"
         try:
+            _sent_us = int(time.time() * 1_000_000)
             r = request_function(service_name,id,work_model,s,trace,query_string, app, trace_context, ms_trace_input=service_input, request_headers=extra_headers)
+            _received_us = int(time.time() * 1_000_000)
+            if call_log is not None:
+                # list.append is atomic in CPython; the parallel branches share call_log
+                call_log.append(_call_stamp_record(service_name, id, _sent_us, _received_us,
+                                                   getattr(r, 'headers', None)))
             if len(r.text) < 100:
                 app.logger.info("Service: %s -> Status_code: %s -- text: %s" % (service_name, r.status_code, r.text))
             else:
@@ -272,7 +303,7 @@ def request_external_service_ms_trace(service_series, id, work_model, s, trace, 
 # external_services is a 2-dimensional list
 # the first dimension is concurrent service series, which are run in parallel
 # the second dimension, i.e., in each service series, are the services to be called in sequence
-def run_external_service_ms_trace(external_services, work_model, query_string, trace, app, trace_context=None, request_headers=None):
+def run_external_service_ms_trace(external_services, work_model, query_string, trace, app, trace_context=None, request_headers=None, call_log=None):
     app.logger.info("** EXTERNAL SERVICES (via MS TRACE)")
     service_error_dict = dict()
     service_response_dict = dict()
@@ -303,7 +334,7 @@ def run_external_service_ms_trace(external_services, work_model, query_string, t
         copy_extra_headers = extra_headers.copy()
         copy_extra_headers["cosched-task-index"] = f"{id}"
         app.logger.debug(f'sending external service request for query {extra_headers["cosched-query-id"]} which fanout is {fanout} and task index is {id}')
-        futures.append(pool.submit(request_external_service_ms_trace, service_series, id, work_model, s, trace, query_string, app, trace_context, copy_extra_headers))
+        futures.append(pool.submit(request_external_service_ms_trace, service_series, id, work_model, s, trace, query_string, app, trace_context, copy_extra_headers, call_log))
         id = id + 1
     wait(futures)
     for x in as_completed(futures):
