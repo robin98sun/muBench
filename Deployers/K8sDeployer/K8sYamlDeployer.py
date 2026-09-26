@@ -6,7 +6,26 @@ import os
 import time
 
 
-def deploy_items(folder,st):
+# How long one Deployment may take to become ready before the deploy stops.
+# The wait below had no limit: a pod that can never start (a hostPath File
+# missing on its node, a node list no node matches -- the new query-<type>
+# pools on the query-scheduler nodes are the case in hand) kept the deploy
+# printing "Waiting deployment ... ready" for ever. 900 s by default; the
+# environment variable MUBENCH_DEPLOY_READY_TIMEOUT_S overrides it.
+DEFAULT_READY_TIMEOUT_S = 900
+
+
+def _ready_timeout_s(timeout_s):
+    if timeout_s is None:
+        timeout_s = os.environ.get("MUBENCH_DEPLOY_READY_TIMEOUT_S", DEFAULT_READY_TIMEOUT_S)
+    timeout_s = float(timeout_s)
+    if timeout_s <= 0:
+        raise ValueError(f"deployment ready timeout must be positive, got {timeout_s}")
+    return timeout_s
+
+
+def deploy_items(folder,st,timeout_s=None):
+    timeout_s = _ready_timeout_s(timeout_s)
     print("######################")
     print(f"We are going to DEPLOY the yaml files in the following folder: {folder}")
     print("######################")
@@ -32,7 +51,18 @@ def deploy_items(folder,st):
                         k8s_apps_api.create_namespaced_deployment(namespace=partial_yaml["metadata"]["namespace"], body=partial_yaml)
                         dn=partial_yaml['metadata']['name']
                         api_response = k8s_apps_api.read_namespaced_deployment_status(name=partial_yaml['metadata']['name'], namespace=partial_yaml["metadata"]["namespace"], pretty=True)
+                        wait_started = time.time()
                         while (api_response.status.ready_replicas != api_response.status.replicas):
+                            waited = time.time() - wait_started
+                            if waited > timeout_s:
+                                # RuntimeError, not ApiException: the handler
+                                # below only prints ApiException and carries
+                                # on, and this must stop the deploy.
+                                raise RuntimeError(
+                                    f"deployment {dn} not ready after {waited:.0f} s "
+                                    f"(limit {timeout_s:.0f} s): ready_replicas="
+                                    f"{api_response.status.ready_replicas} of replicas="
+                                    f"{api_response.status.replicas}; see kubectl describe deployment {dn}")
                             print(f"\n *** Waiting deployment {dn} ready ...*** \n")
                             time.sleep(1)
                             api_response = k8s_apps_api.read_namespaced_deployment_status(name=partial_yaml['metadata']['name'], namespace=partial_yaml["metadata"]["namespace"], pretty=True)

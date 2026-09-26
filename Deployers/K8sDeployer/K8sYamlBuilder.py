@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import yaml
@@ -9,6 +10,31 @@ K8s_YAML_BUILDER_PATH = os.path.dirname(os.path.abspath(__file__))
 SIDECAR_TEMPLATE = "- name: %s-sidecar\n          image: %s"
 NODE_AFFINITY_TEMPLATE = {'affinity': {'nodeAffinity': {'requiredDuringSchedulingIgnoredDuringExecution': {'nodeSelectorTerms': [{'matchExpressions': [{'key': 'kubernetes.io/hostname','operator': 'In','values': ['']}]}]}}}}
 POD_ANTIAFFINITI_TEMPLATE = {'affinity':{'podAntiAffinity':{'requiredDuringSchedulingIgnoredDuringExecution':[{'labelSelector':{'matchExpressions':[{'key':'app','operator':'In','values':['']}]},'topologyKey':'kubernetes.io/hostname'}]}}}
+
+
+# PER-SERVICE KEYS WIN, BUT ONLY WHERE A SERVICE SETS THEM. Query workers
+# (Robin, 2026-09-25) add query-<type> services that carry their own `replicas`
+# (one per query-scheduler node) and their own empty `host-files` (qs nodes
+# have no cpu_profiling_result.json). Before this, the global `ms-replica` /
+# `replicas` and the global `host-files` always won, and
+# customization_work_model / populate_services_with_global_params wrote the
+# global values INTO each service, so by the time a deployment was rendered a
+# service's own value could no longer be told apart from the global one.
+# Recording which of these keys each service carried in the work model FILE,
+# before anything overwrites it, is what lets the service's own value win
+# while every service that never set the key keeps exactly today's result.
+_PER_SERVICE_KEYS = ("replicas", "host-files")
+_services_own_keys = {}
+
+
+def _remember_own_keys(workmodel):
+    for service in workmodel:
+        if service not in _services_own_keys:
+            _services_own_keys[service] = {k for k in _PER_SERVICE_KEYS if k in workmodel[service]}
+
+
+def _has_own(service, key):
+    return key in _services_own_keys.get(service, set())
 
 
 def _normalize_bool_string(value, default_value=False):
@@ -27,6 +53,7 @@ def _normalize_bool_string(value, default_value=False):
 
 # Override work_model params with those in k8s_parameters
 def customization_work_model(workmodel, k8s_parameters):
+    _remember_own_keys(workmodel)
     for service in workmodel:
         workmodel[service].update({"url": f"{service}.{k8s_parameters['namespace']}.svc.{k8s_parameters['cluster_domain']}"})
         workmodel[service].update({"path": k8s_parameters['path']})
@@ -36,8 +63,9 @@ def customization_work_model(workmodel, k8s_parameters):
         if "scheduler-name" in workmodel[service].keys():
             # override scheduler-name value of workmodel.json
             workmodel[service].update({"scheduler-name": k8s_parameters['scheduler-name']})
-        if "replicas" in k8s_parameters.keys():
-            # override replica value of workmodel.json
+        if "replicas" in k8s_parameters.keys() and not _has_own(service, "replicas"):
+            # override replica value of workmodel.json -- unless the service
+            # set its own (query-<type>: one replica per query-scheduler node)
             workmodel[service].update({"replicas": k8s_parameters['replicas']})
         if "cpu-requests" in k8s_parameters.keys():
             # override cpu-requests value of workmodel.json
@@ -56,6 +84,7 @@ def customization_work_model(workmodel, k8s_parameters):
 
 def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_path):
     namespace = k8s_parameters['namespace']
+    _remember_own_keys(workmodel)
     counter=0
     logger_level = None
     if "logger_level" in k8s_parameters.keys():
@@ -80,7 +109,10 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             else:
                 f = f.replace("{{SIDECAR}}", "".rstrip())
             
-            if "ms-replica" in k8s_parameters.keys():
+            if _has_own(service, "replicas"):
+                # the service's own count beats the global ms-replica
+                f = f.replace("{{REPLICAS}}", str(workmodel[service]["replicas"]))
+            elif "ms-replica" in k8s_parameters.keys():
                 f = f.replace("{{REPLICAS}}", str(k8s_parameters["ms-replica"]))
             elif "replicas" in workmodel[service].keys():
                 f = f.replace("{{REPLICAS}}", str(workmodel[service]["replicas"]))
@@ -166,7 +198,14 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             else:
                 f = f.replace("{{TICK_PERIOD_MS}}", "1")
 
-            if "worker-node-affinity" in k8s_parameters.keys():
+            # A service that places itself -- its own `replicas` AND its own
+            # `node_affinity`, i.e. a query-<type> pool -- keeps its node list
+            # even when a global worker-node-affinity is set. Every service
+            # without its own `replicas` (all the node<i>-* services) takes the
+            # branch it took before.
+            places_itself = _has_own(service, "replicas") and "node_affinity" in workmodel[service].keys()
+            affinity_dict = None
+            if "worker-node-affinity" in k8s_parameters.keys() and not places_itself:
                 NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
                 # Ensure values is always a list
                 worker_affinity_values = k8s_parameters["worker-node-affinity"]["values"]
@@ -175,6 +214,17 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0].update({"values" : worker_affinity_values})
                 NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0].update({"key" : k8s_parameters["worker-node-affinity"]["key"]})
                 f = f.replace("{{NODE_AFFINITY}}", str(yaml.dump(NODE_AFFINITY_TEMPLATE_TO_ADD)).rstrip().replace('\n','\n      '))
+            elif places_itself:
+                # deepcopy with the hostname key set explicitly: .copy() above
+                # is shallow, so the branch before this one (and the nginx
+                # block below) rewrite the SHARED template's key in place.
+                NODE_AFFINITY_TEMPLATE_TO_ADD = copy.deepcopy(NODE_AFFINITY_TEMPLATE)
+                node_affinity_value = workmodel[service]["node_affinity"]
+                if isinstance(node_affinity_value, str):
+                    node_affinity_value = [node_affinity_value]
+                match_expression = NODE_AFFINITY_TEMPLATE_TO_ADD['affinity']['nodeAffinity']['requiredDuringSchedulingIgnoredDuringExecution']['nodeSelectorTerms'][0]['matchExpressions'][0]
+                match_expression.update({"key": "kubernetes.io/hostname", "values": list(node_affinity_value)})
+                affinity_dict = NODE_AFFINITY_TEMPLATE_TO_ADD
             elif "node_affinity" in workmodel[service].keys():
                 NODE_AFFINITY_TEMPLATE_TO_ADD = NODE_AFFINITY_TEMPLATE.copy()
                 # Ensure values is always a list
@@ -185,8 +235,24 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 f = f.replace("{{NODE_AFFINITY}}", str(yaml.dump(NODE_AFFINITY_TEMPLATE_TO_ADD)).rstrip().replace('\n','\n      '))
             else:
                 f = f.replace("{{NODE_AFFINITY}}", "")
-                
-            if "pod_antiaffinity" in workmodel[service].keys() and workmodel[service]['pod_antiaffinity']==True:
+
+            wants_antiaffinity = "pod_antiaffinity" in workmodel[service].keys() and workmodel[service]['pod_antiaffinity']==True
+            if affinity_dict is not None:
+                # ONE `affinity:` KEY. {{NODE_AFFINITY}} and {{POD_ANTIAFFINITY}}
+                # each render their own top-level `affinity:` under the pod
+                # spec; with both set the pod spec carries the key twice, and
+                # the YAML loader keeps only the LAST -- the anti-affinity --
+                # so the node list is dropped without an error and the query
+                # pods may land on any node. Merged here into one mapping, and
+                # {{POD_ANTIAFFINITY}} left empty.
+                if wants_antiaffinity:
+                    anti = copy.deepcopy(POD_ANTIAFFINITI_TEMPLATE)
+                    anti['affinity']['podAntiAffinity']['requiredDuringSchedulingIgnoredDuringExecution'][0]['labelSelector']['matchExpressions'][0]['values'][0] = service
+                    affinity_dict['affinity']['podAntiAffinity'] = anti['affinity']['podAntiAffinity']
+                    wants_antiaffinity = False
+                f = f.replace("{{NODE_AFFINITY}}", str(yaml.dump(affinity_dict)).rstrip().replace('\n','\n      '))
+
+            if wants_antiaffinity:
                 POD_ANTIAFFINITY_TO_ADD = POD_ANTIAFFINITI_TEMPLATE.copy()
                 POD_ANTIAFFINITY_TO_ADD['affinity']['podAntiAffinity']['requiredDuringSchedulingIgnoredDuringExecution'][0]['labelSelector']['matchExpressions'][0]['values'][0] = service
                 POD_ANTIAFFINITY_TO_ADD = str(yaml.dump(POD_ANTIAFFINITY_TO_ADD)).replace('\n','\n        ').rstrip()
@@ -241,7 +307,12 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             # add host files mount paths and volumes
 
             host_files_list = []
-            if "host-files" in k8s_parameters.keys():
+            if _has_own(service, "host-files"):
+                # the service's own list, EVEN WHEN EMPTY, beats the global
+                # one: query-<type> pods run on nodes that do not have the
+                # global list's cpu_profiling_result.json.
+                host_files_list = workmodel[service]["host-files"]
+            elif "host-files" in k8s_parameters.keys():
                 host_files_list = k8s_parameters["host-files"]
 
             elif "host-files" in workmodel[service].keys():
@@ -318,9 +389,12 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
 
 def populate_services_with_global_params(workmodel, k8s_parameters):
     interested_params = ["host-files"]
+    _remember_own_keys(workmodel)
     for service in workmodel:
         for param in interested_params:
-            if param in k8s_parameters.keys():
+            # a service's own value (even an empty list) is kept; the pod
+            # reads this ConfigMap copy, not the Deployment
+            if param in k8s_parameters.keys() and not _has_own(service, param):
                 workmodel[service][param] = k8s_parameters[param]
     return workmodel
 
