@@ -72,6 +72,11 @@ spec:
            "concurrency":{{ENVOY_CONCURRENCY}}}
     spec:
       terminationGracePeriodSeconds : 3
+      # No service-link env vars: Kubernetes otherwise injects ~13 per Service
+      # (1,355 for 104 services on robin98-317986), and requests scans them all
+      # for proxy settings on every outgoing call -- ~25 ms of CPU per call.
+      # Services are reached by DNS name; nothing reads these variables.
+      enableServiceLinks: false
       schedulerName: {{SCHEDULER_NAME}}
       dnsConfig:
         options:

@@ -67,6 +67,12 @@ def _build_rest_session(work_model, app):
     pool_block = _parse_bool(os.getenv("SERVICE_POOL_BLOCK"), False)
 
     session = requests.Session()
+    # trust_env=False: do not re-read the environment (proxies, .netrc, CA
+    # bundle) on every request. With Kubernetes service links on, a pod has
+    # ~1,400 env vars and requests scanned them twice per call -- 25 ms of CPU
+    # before each call left the process (robin98-317986, 2026-09-27; raw
+    # socket 0.1 ms, trust_env=False 1.3 ms). No proxy is used in the cluster.
+    session.trust_env = False
     adapter = HTTPAdapter(
         pool_connections=pool_connections,
         pool_maxsize=pool_maxsize,
