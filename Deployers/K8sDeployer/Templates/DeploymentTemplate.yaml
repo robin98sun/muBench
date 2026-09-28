@@ -124,6 +124,8 @@ spec:
               value: {{SERVICE_POOL_MAXSIZE}}
             - name: SERVICE_POOL_BLOCK
               value: {{SERVICE_POOL_BLOCK}}
+            - name: MUB_HTTP_CLIENT
+              value: {{HTTP_CLIENT}}
 
           resources: {{RESOURCES}}    
         

@@ -11,6 +11,9 @@ import mub_pb2 as pb2
 import json
 from pprint import pprint
 from requests.adapters import HTTPAdapter
+import http.client
+import select
+from urllib.parse import urlsplit
 
 
 service_stub = dict()
@@ -93,6 +96,94 @@ def _build_rest_session(work_model, app):
     return session
 
 
+class _HCResponse:
+    """What callers read from a response: status_code, text, headers.get()
+    (case-insensitive, like requests)."""
+    __slots__ = ("status_code", "text", "headers")
+
+
+class _HttpClientPool:
+    """The same calls as a requests.Session (post/get with data= and headers=),
+    made with http.client over kept-open connections.
+
+    Robin, 2026-09-27: measured inside a pod on robin98-317986, a call reaches
+    the sidecar 0.2 ms after http.client sends it and 1.2 ms after a
+    requests.Session (trust_env=False) does -- the rest is requests/urllib3 work
+    in the interpreter. MUB_HTTP_CLIENT picks the path, so the two can be
+    compared on the same deployment.
+
+    One pool for the process, shared by every thread under a lock: the calls
+    run on a ThreadPoolExecutor made per request, so a per-thread connection
+    would never be reused. Like the requests adapter here (max_retries=0),
+    nothing is sent twice: a kept connection the far side has closed is found
+    before it is used (readable while idle = EOF), never by a failed send."""
+
+    def __init__(self, maxsize):
+        self.maxsize = maxsize
+        self.idle = {}              # (host, port) -> [HTTPConnection]
+        self.lock = threading.Lock()
+
+    def _take(self, key):
+        with self.lock:
+            conns = self.idle.get(key)
+            while conns:
+                c = conns.pop()
+                sock = c.sock
+                if sock is None:
+                    continue
+                try:
+                    r, _, _ = select.select([sock], [], [], 0)
+                except (OSError, ValueError):
+                    r = [sock]
+                if r:                  # closed (or unexpected bytes) while idle
+                    c.close()
+                    continue
+                return c
+        return http.client.HTTPConnection(key[0], key[1])
+
+    def _give(self, key, c):
+        with self.lock:
+            conns = self.idle.setdefault(key, [])
+            if len(conns) < self.maxsize:
+                conns.append(c)
+                return
+        c.close()
+
+    def _call(self, method, url, data=None, headers=None):
+        u = urlsplit(url)
+        key = (u.hostname, u.port or 80)
+        path = (u.path or "/") + (("?" + u.query) if u.query else "")
+        body = data.encode("utf-8") if isinstance(data, str) else data
+        c = self._take(key)
+        try:
+            c.request(method, path, body=body, headers=headers or {})
+            resp = c.getresponse()
+            payload = resp.read()
+        except Exception:
+            c.close()
+            raise
+        r = _HCResponse()
+        r.status_code = resp.status
+        r.text = payload.decode("utf-8", "replace")
+        r.headers = resp.headers      # email.message.Message: .get() ignores case
+        if resp.will_close:
+            c.close()
+        else:
+            self._give(key, c)
+        return r
+
+    def post(self, url, data=None, headers=None):
+        return self._call("POST", url, data=data, headers=headers)
+
+    def get(self, url, headers=None):
+        return self._call("GET", url, headers=headers)
+
+
+def _http_client_choice():
+    v = (os.getenv("MUB_HTTP_CLIENT") or "requests").strip().lower()
+    return "http.client" if v in ("http.client", "httpclient", "http_client") else "requests"
+
+
 def _get_rest_session(work_model, app):
     global _rest_session, _rest_session_pid
     current_pid = os.getpid()
@@ -101,7 +192,13 @@ def _get_rest_session(work_model, app):
 
     with _rest_session_lock:
         if _rest_session is None or _rest_session_pid != current_pid:
-            _rest_session = _build_rest_session(work_model, app)
+            if _http_client_choice() == "http.client":
+                maxsize = _parse_positive_int(os.getenv("SERVICE_POOL_MAXSIZE"), 16)
+                _rest_session = _HttpClientPool(maxsize)
+                app.logger.info("Configured http.client pool for pid %s (MUB_HTTP_CLIENT), maxsize=%d",
+                                current_pid, maxsize)
+            else:
+                _rest_session = _build_rest_session(work_model, app)
             _rest_session_pid = current_pid
     return _rest_session
 

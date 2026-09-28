@@ -280,6 +280,12 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             service_pool_block = _normalize_bool_string(k8s_parameters.get("service-pool-block"), False)
             f = f.replace("{{SERVICE_POOL_BLOCK}}", f'\'{service_pool_block}\'')
             f = f.replace("{{DNS_NDOTS}}", f'\'{k8s_parameters.get("dns-ndots", 1)}\'')
+            # REST client for calls to other services: "requests" (default) or
+            # "http.client" (ExternalServiceExecutor.py, MUB_HTTP_CLIENT).
+            http_client = str(k8s_parameters.get("http-client", "requests"))
+            if http_client not in ("requests", "http.client"):
+                raise ValueError(f"http-client must be requests or http.client, not {http_client!r}")
+            f = f.replace("{{HTTP_CLIENT}}", f'\'{http_client}\'')
             
             rank_string='' # ranck string is used to order the yaml file as a funciont of the cpu-requests 
             if  len(set(workmodel[service].keys()).intersection({"cpu-limits","memory-limits","cpu-requests","memory-requests"})):
