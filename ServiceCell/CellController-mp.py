@@ -478,11 +478,22 @@ if __name__ == '__main__':
         app.logger.info('Starting REST server')
         init_REST(app)
         # Start Gunicorn HTTP REST Server (multi-process)
+        # KEEP-ALIVE (Robin 2026-09-30, "turn keep-alive back on"). gunicorn
+        # 20.1.0's threaded worker keeps a connection alive only while
+        # len(keep) < worker_connections - threads; worker_connections was left
+        # at its default 1000 against threads=4000, so EVERY response was
+        # "Connection: close", every task opened a new connection, and each new
+        # connection woke all PN workers polling the shared listening socket
+        # (measured: ~66 wake-ups per request, 64 workers). worker_connections
+        # also caps a worker's open connections, so it is set to twice the
+        # threads: up to TN kept alive, TN in service. Env WORKER_CONNECTIONS
+        # overrides.
         options_gunicorn = {
             'bind': '%s:%s' % ('0.0.0.0', 8080),
             'workers': PN,
             'config': "/app/gunicorn.conf.py",
-            'threads':TN
+            'threads':TN,
+            'worker_connections': int(os.environ.get('WORKER_CONNECTIONS', 2 * int(TN)))
         }
         app.logger.info('Starting Gunicorn HTTP REST Server (multi-process)')
         HttpServer(app, options_gunicorn).run()
