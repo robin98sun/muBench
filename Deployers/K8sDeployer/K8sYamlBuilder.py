@@ -270,6 +270,8 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
             # seconds gunicorn keeps an idle kept-alive connection; gunicorn's own
             # default is 2, kept when the work model does not say
             f = f.replace("{{GUNICORN_KEEPALIVE}}", f'\'{workmodel[service].get("keepalive", 2)}\'')
+            # CPython's thread switch interval, s; empty = Python's own (0.005)
+            f = f.replace("{{PY_SWITCH_INTERVAL_S}}", f'\'{workmodel[service].get("switch_interval_s", "")}\'')
             
             if logger_level is not None: 
                 f = f.replace("{{LOGGER_LEVEL}}", f'\'{logger_level}\'')

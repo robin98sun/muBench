@@ -114,6 +114,8 @@ spec:
               value: {{TN}}
             - name: GUNICORN_KEEPALIVE
               value: {{GUNICORN_KEEPALIVE}}
+            - name: PY_SWITCH_INTERVAL_S
+              value: {{PY_SWITCH_INTERVAL_S}}
             - name: NODE_NAME
               valueFrom:
                 fieldRef:

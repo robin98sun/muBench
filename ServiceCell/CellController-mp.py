@@ -474,6 +474,16 @@ class gRPCThread(Thread, pb2_grpc.MicroServiceServicer):
         self.server.start()
 
 if __name__ == '__main__':
+    # How often CPython hands the interpreter lock between threads (default
+    # 5 ms). gthread's main thread (accept/select/dispatch) needs the lock several
+    # times per request; with CPU-bound handler threads in the same process it
+    # can wait a switch interval each time. Measured 2026-09-30 with keep-alive:
+    # entry 'release -> handler start' p99 24 ms vs 2.6 ms without. Set before
+    # gunicorn forks, so every worker inherits it.
+    _si = os.environ.get('PY_SWITCH_INTERVAL_S', '').strip()
+    if _si:
+        sys.setswitchinterval(float(_si))
+    app.logger.info('python switch interval %s s', sys.getswitchinterval())
     if request_method == "rest":
         app.logger.info('Starting REST server')
         init_REST(app)
