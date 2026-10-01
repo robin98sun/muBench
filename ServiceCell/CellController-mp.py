@@ -493,7 +493,13 @@ if __name__ == '__main__':
             'workers': PN,
             'config': "/app/gunicorn.conf.py",
             'threads':TN,
-            'worker_connections': int(os.environ.get('WORKER_CONNECTIONS', 2 * int(TN)))
+            'worker_connections': int(os.environ.get('WORKER_CONNECTIONS', 2 * int(TN))),
+            # Seconds an idle kept-alive connection is kept (gunicorn default 2).
+            # The sidecar keeps its idle connections to the app far longer, so a
+            # request can land on one the app is just closing -> 503 (measured
+            # 2026-09-30: ~20 per million). A longer value makes that rarer; it
+            # disappears only if the sidecar closes idle connections first.
+            'keepalive': int(os.environ.get('GUNICORN_KEEPALIVE', 2))
         }
         app.logger.info('Starting Gunicorn HTTP REST Server (multi-process)')
         HttpServer(app, options_gunicorn).run()

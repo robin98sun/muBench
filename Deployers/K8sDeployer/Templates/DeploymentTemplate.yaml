@@ -112,6 +112,8 @@ spec:
               value: {{PN}}
             - name: TN
               value: {{TN}}
+            - name: GUNICORN_KEEPALIVE
+              value: {{GUNICORN_KEEPALIVE}}
             - name: NODE_NAME
               valueFrom:
                 fieldRef:

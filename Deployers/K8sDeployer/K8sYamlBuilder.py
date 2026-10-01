@@ -267,6 +267,9 @@ def create_deployment_service_yaml_files(workmodel, k8s_parameters, nfs, output_
                 f = f.replace("{{TN}}", f'\'{workmodel[service]["threads"]}\'')
             else:
                 f = f.replace("{{TN}}", "\'4\'")
+            # seconds gunicorn keeps an idle kept-alive connection; gunicorn's own
+            # default is 2, kept when the work model does not say
+            f = f.replace("{{GUNICORN_KEEPALIVE}}", f'\'{workmodel[service].get("keepalive", 2)}\'')
             
             if logger_level is not None: 
                 f = f.replace("{{LOGGER_LEVEL}}", f'\'{logger_level}\'')
