@@ -483,7 +483,9 @@ if __name__ == '__main__':
     _si = os.environ.get('PY_SWITCH_INTERVAL_S', '').strip()
     if _si:
         sys.setswitchinterval(float(_si))
-    app.logger.info('python switch interval %s s', sys.getswitchinterval())
+    # printed, not logged: LOGGER_LEVEL is ERROR in the runs, and a gate reads
+    # this line to prove the planned value is the one running
+    print(f'python switch interval {sys.getswitchinterval()} s', flush=True)
     if request_method == "rest":
         app.logger.info('Starting REST server')
         init_REST(app)
