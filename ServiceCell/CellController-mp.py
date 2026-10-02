@@ -530,7 +530,10 @@ if __name__ == '__main__':
                 # in the master, before fork: the lowest slot no live process
                 # holds, so a restarted process gets its port back
                 used = {getattr(w, 'pp_slot', -1) for w in server.WORKERS.values()}
-                worker.pp_slot = min(i for i in range(int(PN)) if i not in used)
+                free = [i for i in range(int(PN)) if i not in used]
+                if not free:   # only on a HUP/TTIN reload, which the runs never use
+                    raise RuntimeError(f'no free per-process port slot: {int(PN)} held')
+                worker.pp_slot = free[0]
 
             def _pp_post_worker_init(worker):
                 # in the process, before it serves: its own listener next to the
