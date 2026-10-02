@@ -513,6 +513,41 @@ if __name__ == '__main__':
             # disappears only if the sidecar closes idle connections first.
             'keepalive': int(os.environ.get('GUNICORN_KEEPALIVE', 2))
         }
+        # ONE PORT PER PROCESS (co-scheduling, 2026-10-01; on only when
+        # PER_PROCESS_PORTS=1). With keep-alive, each kept connection belongs to
+        # the process that accepted it, and the sidecar cannot see which process
+        # is busy: on a test node 9-20 of 64 processes did all the work and
+        # requests waited behind busy ones while others were idle. Here each
+        # process also listens on its own port, 127.0.0.1:(base + slot), and the
+        # sidecar is pointed at those ports with a least-busy choice, so it
+        # picks the process per request. The shared 0.0.0.0:8080 listener stays
+        # for probes, /metrics and anything not routed to the per-process ports.
+        if os.environ.get('PER_PROCESS_PORTS', '') == '1':
+            import socket as _socket
+            _pp_base = int(os.environ.get('PER_PROCESS_PORT_BASE', 9000))
+
+            def _pp_pre_fork(server, worker):
+                # in the master, before fork: the lowest slot no live process
+                # holds, so a restarted process gets its port back
+                used = {getattr(w, 'pp_slot', -1) for w in server.WORKERS.values()}
+                worker.pp_slot = min(i for i in range(int(PN)) if i not in used)
+
+            def _pp_post_worker_init(worker):
+                # in the process, before it serves: its own listener next to the
+                # shared one. TCP_NODELAY as gunicorn sets on its own listener
+                # (accepted connections inherit it); without it a test node showed
+                # a fixed ~40 ms on 8-13% of responses (small writes held back).
+                s = _socket.socket(_socket.AF_INET, _socket.SOCK_STREAM)
+                s.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
+                s.setsockopt(_socket.IPPROTO_TCP, _socket.TCP_NODELAY, 1)
+                s.bind(('127.0.0.1', _pp_base + worker.pp_slot))
+                s.listen(worker.cfg.backlog)
+                worker.sockets.append(s)
+
+            options_gunicorn['pre_fork'] = _pp_pre_fork
+            options_gunicorn['post_worker_init'] = _pp_post_worker_init
+            # printed, not logged (LOGGER_LEVEL ERROR): the plan step reads it
+            print(f'per-process ports 127.0.0.1:{_pp_base}-{_pp_base + int(PN) - 1}', flush=True)
         app.logger.info('Starting Gunicorn HTTP REST Server (multi-process)')
         HttpServer(app, options_gunicorn).run()
     elif request_method == "grpc":
