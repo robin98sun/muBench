@@ -344,6 +344,7 @@ def start_worker():
         service_error_dict = dict()
         service_response_dict = dict()
         call_log = []   # per-downstream-call path stamps (ExternalServiceExecutor._call_stamp_record)
+        call_tail_log = []   # per-downstream-call deadline, tail, net (ExternalServiceExecutor._call_tail_record)
         if is_ms_trace(trace):
             if "external_services" in trace.keys() and trace["external_services"] is not None and len(trace["external_services"])>0:
                 my_service_graph = trace["external_services"]
@@ -352,7 +353,7 @@ def start_worker():
                 extra_headers["cosched-caller"] = ID
                 extra_headers["cosched-query-id"] = f"{trace_id}::{ID}::{int(time.time()*1_000_000)}"
                 app.logger.debug(f'sending external service request with extra headers: {extra_headers}')
-                service_error_dict, service_response_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers, request_headers=extra_headers, call_log=call_log)
+                service_error_dict, service_response_dict = run_external_service_ms_trace(my_service_graph,globalDict['work_model'],query_string,dict(),app, jaeger_headers, request_headers=extra_headers, call_log=call_log, call_tail_log=call_tail_log)
                 body = f"{body}||{(time.time()-start_request_processing)*1000}||{'!'.join(list(service_response_dict.values()) + [str(e) for e in list(service_error_dict.values())])}"
             else:
                 body = f"{body}||{(time.time()-start_request_processing)*1000}||null"
@@ -381,6 +382,8 @@ def start_worker():
         response.headers['X-Mub-Handler-End-Us'] = str(int(time.time() * 1_000_000))
         if call_log:
             response.headers['X-Mub-Calls'] = ';'.join(call_log)
+        if call_tail_log:
+            response.headers['X-Mub-Call-Tails'] = ';'.join(call_tail_log)
         EXTERNAL_PROCESSING.labels(ZONE, K8S_APP, request.method, request.path).observe((time.time() - start_external_request_processing)*1000)
         EXTERNAL_PROCESSING_BUCKET.labels(ZONE, K8S_APP, request.method, request.path).observe((time.time() - start_external_request_processing)*1000)
         
